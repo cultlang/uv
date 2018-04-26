@@ -1,0 +1,59 @@
+id: Uv
+namespace: Cultlang
+shortname: Libuv Bindings for cultlang
+version: "1.0.0"
+repo: http://github.com/OffByOneStudios/craft-base
+dependencies:
+  - Util@OffByOneStudios
+  - Types@OffByOneStudios
+  - Lisp@OffByOneStudios
+
+vendor-dependencies:
+  x86_64-pc-windows-msvccoff: 
+    - libuv
+  osx_x64_clang: []
+  debian_x64_gcc: []
+
+platform-dependencies:
+  x86_64-pc-windows-msvccoff:
+   - Iphlpapi.lib
+   - Psapi.lib
+   - Userenv.lib
+
+  osx_x64_clang: []
+  debian_x64_gcc: []
+
+platform-compiler-flags:
+  x86_64-pc-windows-msvccoff: []
+  osx_x64_clang:
+    - "-std=c++1z"
+    - "-stdlib=libc++"
+    - "-Wc++11-extensions"
+  debian_x64_gcc:
+    - "-std=gnu++1z"
+    - "-pthread"
+    - "-fpermissive"
+
+platform-link-flags:
+  x86_64-pc-windows-msvccoff:
+    - "/ignore:4099"
+
+platform-defines:
+  x86_64-pc-windows-msvccoff: {}
+  osx_x64_clang: {}
+  debian_x64_gcc: {}
+  
+artifacts:
+  library:
+    primary: yes
+    kind: dll craft-types
+    files:
+      - src/**/*.*
+  test:
+    kind: test
+    files:
+      - test/**/*.*
+  entry:
+    kind: exe
+    files:
+      - entry/**/*.*
