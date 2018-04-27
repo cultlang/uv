@@ -1,6 +1,7 @@
 #pragma once
 #include "uv/common.h"
 
+#include "lisp/library/system/prelude.h"
 #include "uv/prelude.h"
 
 #include "uv/buffer.h"
@@ -51,9 +52,52 @@ namespace uv
 		i_loop _loop;
 	public:
 		CULTLANG_UV_EXPORTED ReadFile(i_loop l, i_str file, i_int bufsize, i_func err, i_func read, i_func done);
-		CULTLANG_UV_EXPORTED void craft_setupInstance();
 		~ReadFile();
 	};
-		
+	
+	class WriteFile
+		: public virtual craft::types::Object
+	{
+		CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(cultlang::uv::WriteFile)
+	private:
+		typedef craft::types::instance<cultlang::uv::Loop> i_loop;
+		typedef craft::types::instance<craft::lisp::library::Buffer> i_buf;
+		typedef craft::types::instance<std::string> i_str;
+		typedef craft::types::instance<int64_t> i_int;
+		typedef craft::types::instance<> i_func;
+
+		craft::types::instance<Fs> _open, _write, _close;
+		i_str _file;
+
+		i_func _fwrite;
+		i_func _ferr;
+		i_func _fdone;
+		i_loop _loop;
+
+
+		/// These types ensure that a pointer is kept alive to the last buffer written to file
+		i_str _s_last_buf;
+		i_buf _b_last_buf;
+		uv_buf_t _last_buf;
+
+	public:
+		CULTLANG_UV_EXPORTED WriteFile(i_loop l, i_str file, i_int bufsize, i_func err, i_func write, i_func done);
+		~WriteFile();
+	};
+
+	class FileOp
+		: public virtual craft::types::Object
+	{
+		CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(cultlang::uv::FileOp);
+		typedef craft::types::instance<> i_func;
+	public:
+		craft::types::instance<Fs> _op;
+		i_func _f;
+
+		CULTLANG_UV_EXPORTED FileOp(i_func f);
+		~FileOp();
+	};
+
 	CULTLANG_UV_EXPORTED void make_fs_ops(craft::types::instance<craft::lisp::Module> ret);
+
 }}

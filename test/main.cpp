@@ -104,11 +104,28 @@ int main(int argc, char** argv) {
 (uv/run loop)
 )f");
 
+	std::string write = (R"f(
+(define loop (uv/loop))
+(define strings (list "One" "Two" "Three" "Four"))
+(define writef (function (buf) (list/push buffers buf)))
+(define endf (function () (print (buffer/join buffers))))
+(define errf (function (err) (print "Oops didn't work")))
+(define writeh (uv/write loop "bar.txt" errf writef endf))
+(uv/run loop)
+)f");
+
+	std::string mkdir = (R"f(
+(define loop (uv/loop))
+(define mkdirf (function (i) (print i)))
+(define writeh (uv/mkdir loop "fishtacos" mkdirf))
+(uv/run loop)
+)f");
+
 	instance<Module> statement;
 	try
 	{
 		auto statement_loader = instance<AnonLoader>::make();
-		statement_loader->setContent(instance<std::string>::make(read));
+		statement_loader->setContent(instance<std::string>::make(mkdir));
 		statement_loader->setModule(live_module);
 		statement = ns->requireModule("anon:repl", statement_loader);
 	}
@@ -126,9 +143,7 @@ int main(int argc, char** argv) {
 
 			std::cout << res.toString() << '\n';
 
-			//instance<RuntimeSlots> slots = live_module->moduleValue();
-			//for (auto i = 0; i < slots->getSize((instance<>*)&slots); ++i)
-			//	std::cout << slots->getSlot((instance<>*)&slots, i)->toString() << '\n';
+			return 0;
 		}
 	}
 	catch (std::exception const& e)
