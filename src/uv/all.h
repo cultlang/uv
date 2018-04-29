@@ -1,9 +1,8 @@
 #pragma once
+#include "uv/common.h"
 
-#include "loop.h"
-#include "idle.h"
-#include "timer.h"
-#include "check.h"
-#include "prepare.h"
+namespace cultlang {
+namespace uv {
 
-#include "fs/fs.h"
+	CULTLANG_UV_EXPORTED void make_uv_bindings(craft::types::instance<craft::lisp::Module> m);
+}}
