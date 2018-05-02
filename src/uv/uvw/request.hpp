@@ -15,7 +15,7 @@ template<typename T, typename U>
 class Request: public Resource<T, U> {
 protected:
     static auto reserve(U *req) {
-        auto ptr = static_cast<T*>(req->data)->shared_from_this();
+        auto ptr = static_cast<T*>(req->data);
         ptr->reset();
         return ptr;
     }

@@ -54,7 +54,7 @@ public:
     using IPv4 = uvw::IPv4;
     using IPv6 = uvw::IPv6;
 
-    explicit TcpHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, unsigned int f = {})
+    explicit TcpHandle(ConstructorAccess ca, craft::instance<Loop> ref, unsigned int f = {})
         : StreamHandle{ca, std::move(ref)}, tag{f ? FLAGS : DEFAULT}, flags{f}
     {}
 
@@ -215,7 +215,7 @@ public:
      * @param addr Initialized `sockaddr_in` or `sockaddr_in6` data structure.
      */
     void connect(const sockaddr &addr) {
-        auto listener = [ptr = shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = craft::instance<TcpHandle>::fromInternalPointer(this)](const auto &event, const auto &) mutable {
             ptr->publish(event);
         };
 

@@ -23,23 +23,22 @@ int main(int argc, char** argv) {
 	cultlang::uv::make_uv_bindings(live_module);
 	
 	live_module->initialize();
-	std::string timer = (R"f(
-(define foo (variable 10))
-(uv/timer 0 1000 (function () 
-	(do
-		(print "ff" foo)
-		(set foo (- foo 1))
-		(cond (== foo 0) false true)
+	std::string tester = (R"f(
+(define loop (uv/loop))
+(define fish (uv/read loop "CultlangUv.sln" 100
+		(function (fail hndl) (print fail))
+		(function (val hndl) (print val))
+		(function (done) (print "Done"))
 	)
-))
-(uv/loop)
+)
+(uv/run loop)
 )f");
 
 	instance<Module> statement;
 	try
 	{
 		auto statement_loader = instance<AnonLoader>::make();
-		statement_loader->setContent(instance<std::string>::make(timer));
+		statement_loader->setContent(instance<std::string>::make(tester));
 		statement_loader->setModule(live_module);
 		statement = ns->requireModule("anon:repl", statement_loader);
 	}

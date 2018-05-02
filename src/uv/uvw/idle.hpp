@@ -34,7 +34,12 @@ struct IdleEvent {};
  *
  * To create an `IdleHandle` through a `Loop`, no arguments are required.
  */
-class IdleHandle final: public Handle<IdleHandle, uv_idle_t> {
+class IdleHandle final
+	: public Handle<IdleHandle, uv_idle_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::IdleHandle);
+private:
     static void startCallback(uv_idle_t *handle) {
         IdleHandle &idle = *(static_cast<IdleHandle*>(handle->data));
         idle.publish(IdleEvent{});

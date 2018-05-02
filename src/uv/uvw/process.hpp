@@ -46,7 +46,8 @@ enum class UVStdIOFlags: std::underlying_type_t<uv_stdio_flags> {
  *
  * It will be emitted by ProcessHandle according with its functionalities.
  */
-struct ExitEvent {
+struct ExitEvent
+{
     explicit ExitEvent(int64_t code, int sig) noexcept
         : status{code}, signal{sig}
     {}
@@ -61,7 +62,12 @@ struct ExitEvent {
  * Process handles will spawn a new process and allow the user to control it and
  * establish communication channels with it using streams.
  */
-class ProcessHandle final: public Handle<ProcessHandle, uv_process_t> {
+class ProcessHandle final
+	: public Handle<ProcessHandle, uv_process_t>
+	, craft::types::Object	
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::ProcessHandle);
+private:
     static void exitCallback(uv_process_t *handle, int64_t exitStatus, int termSignal) {
         ProcessHandle &process = *(static_cast<ProcessHandle*>(handle->data));
         process.publish(ExitEvent{exitStatus, termSignal});
@@ -71,7 +77,7 @@ public:
     using Process = details::UVProcessFlags;
     using StdIO = details::UVStdIOFlags;
 
-    ProcessHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref)
+    ProcessHandle(ConstructorAccess ca, craft::instance<Loop> ref)
         : Handle{ca, std::move(ref)}, poFdStdio{1}
     {
         // stdin container default initialization

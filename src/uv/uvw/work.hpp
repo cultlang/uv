@@ -44,7 +44,7 @@ class WorkReq final: public Request<WorkReq, uv_work_t> {
 public:
     using Task = InternalTask;
 
-    explicit WorkReq(ConstructorAccess ca, std::shared_ptr<Loop> ref, InternalTask t)
+    explicit WorkReq(ConstructorAccess ca, craft::instance<Loop> ref, InternalTask t)
         : Request{ca, std::move(ref)}, task{t}
     {}
 

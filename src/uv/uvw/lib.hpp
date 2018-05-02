@@ -21,7 +21,7 @@ namespace uvw {
  */
 class SharedLib final: public UnderlyingType<SharedLib, uv_lib_t> {
 public:
-    explicit SharedLib(ConstructorAccess ca, std::shared_ptr<Loop> ref, std::string filename) noexcept
+    explicit SharedLib(ConstructorAccess ca, craft::instance<Loop> ref, std::string filename) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         opened = (0 == uv_dlopen(filename.data(), get()));

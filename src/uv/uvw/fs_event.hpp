@@ -37,7 +37,8 @@ enum class UVFsEvent: std::underlying_type_t<uv_fs_event> {
  *
  * It will be emitted by FsEventHandle according with its functionalities.
  */
-struct FsEventEvent {
+struct FsEventEvent
+{
     FsEventEvent(const char * pathname, Flags<details::UVFsEvent> events)
         : filename{pathname}, flags{std::move(events)}
     {}
@@ -75,7 +76,12 @@ struct FsEventEvent {
  * [documentation](http://docs.libuv.org/en/v1.x/fs_event.html)
  * for further details.
  */
-class FsEventHandle final: public Handle<FsEventHandle, uv_fs_event_t> {
+class FsEventHandle final
+	: public Handle<FsEventHandle, uv_fs_event_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::FsEventHandle);
+private:
     static void startCallback(uv_fs_event_t *handle, const char *filename, int events, int status) {
         FsEventHandle &fsEvent = *(static_cast<FsEventHandle*>(handle->data));
         if(status) { fsEvent.publish(ErrorEvent{status}); }

@@ -35,7 +35,7 @@ public:
     using Task = InternalTask;
     using Type = uv_thread_t;
 
-    explicit Thread(ConstructorAccess ca, std::shared_ptr<Loop> ref, InternalTask t, std::shared_ptr<void> d = nullptr) noexcept
+    explicit Thread(ConstructorAccess ca, craft::instance<Loop> ref, InternalTask t, std::shared_ptr<void> d = nullptr) noexcept
         : UnderlyingType{ca, std::move(ref)}, data{std::move(d)}, task{std::move(t)}
     {}
 
@@ -67,7 +67,7 @@ private:
 
 class ThreadLocalStorage final: public UnderlyingType<ThreadLocalStorage, uv_key_t> {
 public:
-    explicit ThreadLocalStorage(ConstructorAccess ca, std::shared_ptr<Loop> ref) noexcept
+    explicit ThreadLocalStorage(ConstructorAccess ca, craft::instance<Loop> ref) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         uv_key_create(UnderlyingType::get());
@@ -113,7 +113,7 @@ class Mutex final: public UnderlyingType<Mutex, uv_mutex_t> {
     friend class Condition;
 
 public:
-    explicit Mutex(ConstructorAccess ca, std::shared_ptr<Loop> ref, bool recursive = false) noexcept
+    explicit Mutex(ConstructorAccess ca, craft::instance<Loop> ref, bool recursive = false) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         if(recursive) {
@@ -143,7 +143,7 @@ public:
 
 class RWLock final: public UnderlyingType<RWLock, uv_rwlock_t> {
 public:
-    explicit RWLock(ConstructorAccess ca, std::shared_ptr<Loop> ref) noexcept
+    explicit RWLock(ConstructorAccess ca, craft::instance<Loop> ref) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         uv_rwlock_init(get());
@@ -181,7 +181,7 @@ public:
 
 class Semaphore final: public UnderlyingType<Semaphore, uv_sem_t> {
 public:
-    explicit Semaphore(ConstructorAccess ca, std::shared_ptr<Loop> ref, unsigned int value) noexcept
+    explicit Semaphore(ConstructorAccess ca, craft::instance<Loop> ref, unsigned int value) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         uv_sem_init(get(), value);
@@ -207,7 +207,7 @@ public:
 
 class Condition final: public UnderlyingType<Condition, uv_cond_t> {
 public:
-    explicit Condition(ConstructorAccess ca, std::shared_ptr<Loop> ref) noexcept
+    explicit Condition(ConstructorAccess ca, craft::instance<Loop> ref) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         uv_cond_init(get());
@@ -237,7 +237,7 @@ public:
 
 class Barrier final: public UnderlyingType<Barrier, uv_barrier_t> {
 public:
-    explicit Barrier(ConstructorAccess ca, std::shared_ptr<Loop> ref, unsigned int count) noexcept
+    explicit Barrier(ConstructorAccess ca, craft::instance<Loop> ref, unsigned int count) noexcept
         : UnderlyingType{ca, std::move(ref)}
     {
         uv_barrier_init(get(), count);

@@ -16,7 +16,8 @@ namespace uvw {
  *
  * It will be emitted by SignalHandle according with its functionalities.
  */
-struct SignalEvent {
+struct SignalEvent
+{
     explicit SignalEvent(int sig) noexcept: signum{sig} {}
 
     int signum; /*!< The signal being monitored by this handle. */
@@ -36,7 +37,12 @@ struct SignalEvent {
  * [documentation](http://docs.libuv.org/en/v1.x/signal.html)
  * for further details.
  */
-class SignalHandle final: public Handle<SignalHandle, uv_signal_t> {
+class SignalHandle final
+	: public Handle<SignalHandle, uv_signal_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::SignalHandle);
+private:
     static void startCallback(uv_signal_t *handle, int signum) {
         SignalHandle &signal = *(static_cast<SignalHandle*>(handle->data));
         signal.publish(SignalEvent{signum});

@@ -49,7 +49,12 @@ enum class UVTTYModeT: std::underlying_type_t<uv_tty_mode_t> {
  * [documentation](http://docs.libuv.org/en/v1.x/tty.html#c.uv_tty_init)
  * for further details.
  */
-class TTYHandle final: public StreamHandle<TTYHandle, uv_tty_t> {
+class TTYHandle final
+	: public StreamHandle<TTYHandle, uv_tty_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::TTYHandle);
+private:
     static auto resetModeMemo() {
         static std::weak_ptr<details::ResetModeMemo> weak;
         auto shared = weak.lock();
@@ -60,7 +65,7 @@ class TTYHandle final: public StreamHandle<TTYHandle, uv_tty_t> {
 public:
     using Mode = details::UVTTYModeT;
 
-    explicit TTYHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, FileHandle desc, bool readable)
+    explicit TTYHandle(ConstructorAccess ca, craft::instance<Loop> ref, FileHandle desc, bool readable)
         : StreamHandle{ca, std::move(ref)},
           memo{resetModeMemo()},
           fd{desc},

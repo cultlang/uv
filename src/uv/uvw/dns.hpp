@@ -18,11 +18,8 @@ namespace uvw {
  *
  * It will be emitted by GetAddrInfoReq according with its functionalities.
  */
-struct AddrInfoEvent
-	: public virtual craft::types::Object
+struct AddrInfoEvent 
 {
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::AddrInfoEvent);
-public:
     using Deleter = void(*)(addrinfo *);
 
     AddrInfoEvent(std::unique_ptr<addrinfo, Deleter> addr)
@@ -45,10 +42,7 @@ public:
  * It will be emitted by GetNameInfoReq according with its functionalities.
  */
 struct NameInfoEvent 
-	: public virtual craft::types::Object
 {
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::NameInfoEvent);
-public:
     NameInfoEvent(const char *host, const char *serv)
         : hostname{host}, service{serv}
     {}
@@ -84,7 +78,7 @@ class GetAddrInfoReq final
 	, public virtual craft::types::Object
 {
 	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::GetAddrInfoReq);
-
+public:
     static void addrInfoCallback(uv_getaddrinfo_t *req, int status, addrinfo *res) {
         auto ptr = reserve(req);
 

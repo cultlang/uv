@@ -144,12 +144,12 @@ class Loop final:
 	public craft::types::Object
 {
 	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::Loop)
-
+private:
     using Deleter = void(*)(uv_loop_t *);
 
     template<typename, typename>
     friend class Resource;
-
+public:
     Loop(std::unique_ptr<uv_loop_t, Deleter> ptr) noexcept
         : loop{std::move(ptr)}
     {}
@@ -165,7 +165,7 @@ public:
      */
     static craft::instance<Loop> create() {
         auto ptr = std::unique_ptr<uv_loop_t, Deleter>{new uv_loop_t, [](uv_loop_t *l){ delete l; }};
-		auto loop = craft::instance<Loop>::make(ptr);
+		auto loop = craft::instance<Loop>::make(std::move(ptr));
 
         if(uv_loop_init(loop->loop.get())) {
 			throw stdext::exception("Failed to Initialize Loop");
@@ -187,7 +187,8 @@ public:
      * @return The initialized default loop.
      */
     static craft::instance<Loop> getDefault() {
-		static auto ref = create();
+		static craft::instance<Loop> ref;
+		if(!ref) ref = create();
 		return ref;
     }
 
@@ -238,8 +239,10 @@ public:
     template<typename R, typename... Args>
     std::enable_if_t<std::is_base_of<BaseHandle, R>::value, craft::types::instance<R>>
     resource(Args&&... args) {
-        auto ptr = R::make(craft_instance(), std::forward<Args>(args)...);
-        ptr = ptr->init() ? ptr : nullptr;
+        auto ptr = R::create(craft_instance(), std::forward<Args>(args)...);
+		if (!ptr->init()) {
+			throw stdext::exception("Failed to initialize Handle");
+		}
         return ptr;
     }
 
@@ -256,7 +259,7 @@ public:
     template<typename R, typename... Args>
     std::enable_if_t<not std::is_base_of<BaseHandle, R>::value, craft::types::instance<R>>
     resource(Args&&... args) {
-        return R::make(craft_instance(), std::forward<Args>(args)...);
+        return R::create(craft_instance(), std::forward<Args>(args)...);
     }
 
     /**

@@ -16,12 +16,7 @@ namespace uvw {
  *
  * It will be emitted by PrepareHandle according with its functionalities.
  */
-struct PrepareEvent
-	: public craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::PrepareEvent)
-};
-
+struct PrepareEvent {};
 
 /**
  * @brief The PrepareHandle handle.
@@ -33,7 +28,7 @@ struct PrepareEvent
  */
 class PrepareHandle final
 	: public Handle<PrepareHandle, uv_prepare_t>
-	, craft::types::Object
+	, public craft::types::Object
 {
 	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::PrepareHandle)
 public:

@@ -19,7 +19,8 @@ namespace uvw {
  *
  * It will be emitted by FsPollHandle according with its functionalities.
  */
-struct FsPollEvent {
+struct FsPollEvent 
+{
     explicit FsPollEvent(Stat previous, Stat current) noexcept
         : prev{std::move(previous)}, curr{std::move(current)}
     {}
@@ -38,7 +39,12 @@ struct FsPollEvent {
  *
  * To create a `FsPollHandle` through a `Loop`, no arguments are required.
  */
-class FsPollHandle final: public Handle<FsPollHandle, uv_fs_poll_t> {
+class FsPollHandle final
+	: public Handle<FsPollHandle, uv_fs_poll_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::FsPollHandle);
+private:
     static void startCallback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, const uv_stat_t *curr) {
         FsPollHandle &fsPoll = *(static_cast<FsPollHandle*>(handle->data));
         if(status) { fsPoll.publish(ErrorEvent{status}); }

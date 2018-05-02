@@ -17,11 +17,7 @@ namespace uvw {
  *
  * It will be emitted by the handles according with their functionalities.
  */
-struct CloseEvent
-	: public craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(CloseEvent)
-};
+struct CloseEvent {};
 
 
 /**
@@ -34,9 +30,6 @@ class Handle: public BaseHandle, public Resource<T, U>
 {
     static void closeCallback(uv_handle_t *handle) {
         Handle<T, U> &ref = *(static_cast<T*>(handle->data));
-        auto ptr = ref.shared_from_this();
-        (void)ptr;
-        ref.reset();
         ref.publish(CloseEvent{});
     }
 
@@ -48,15 +41,14 @@ protected:
 
     template<typename F, typename... Args>
     bool initialize(F &&f, Args&&... args) {
-        if(!this->self()) {
-            auto err = std::forward<F>(f)(this->parent(), this->get(), std::forward<Args>(args)...);
+		auto err = std::forward<F>(f)(this->parent(), this->get(), std::forward<Args>(args)...);
 
-            if(err) {
-                this->publish(ErrorEvent{err});
-            } else {
-                this->leak();
-            }
-        }
+		if (err) {
+			this->publish(ErrorEvent{ err });
+		}
+		else {
+			this->leak();
+		}
 
         return this->self();
     }

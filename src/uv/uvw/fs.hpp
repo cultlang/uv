@@ -164,7 +164,8 @@ struct FsEvent {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::READ> {
+struct FsEvent<details::UVFsType::READ>
+{
     FsEvent(const char *pathname, std::unique_ptr<const char[]> buf, std::size_t sz) noexcept
         : path{pathname}, data{std::move(buf)}, size{sz}
     {}
@@ -182,7 +183,8 @@ struct FsEvent<details::UVFsType::READ> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::WRITE> {
+struct FsEvent<details::UVFsType::WRITE>
+{
     FsEvent(const char *pathname, std::size_t sz) noexcept
         : path{pathname}, size{sz}
     {}
@@ -199,7 +201,8 @@ struct FsEvent<details::UVFsType::WRITE> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::SENDFILE> {
+struct FsEvent<details::UVFsType::SENDFILE>
+{
     FsEvent(const char *pathname, std::size_t sz) noexcept
         : path{pathname}, size{sz}
     {}
@@ -216,7 +219,8 @@ struct FsEvent<details::UVFsType::SENDFILE> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::STAT> {
+struct FsEvent<details::UVFsType::STAT>
+{
     FsEvent(const char *pathname, Stat curr) noexcept
         : path{pathname}, stat{std::move(curr)}
     {}
@@ -233,7 +237,8 @@ struct FsEvent<details::UVFsType::STAT> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::FSTAT> {
+struct FsEvent<details::UVFsType::FSTAT>
+{
     FsEvent(const char *pathname, Stat curr) noexcept
         : path{pathname}, stat{std::move(curr)}
     {}
@@ -250,7 +255,8 @@ struct FsEvent<details::UVFsType::FSTAT> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::LSTAT> {
+struct FsEvent<details::UVFsType::LSTAT>
+{
     FsEvent(const char *pathname, Stat curr) noexcept
         : path{pathname}, stat{std::move(curr)}
     {}
@@ -267,7 +273,8 @@ struct FsEvent<details::UVFsType::LSTAT> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::SCANDIR> {
+struct FsEvent<details::UVFsType::SCANDIR>
+{
     FsEvent(const char *pathname, std::size_t sz) noexcept
         : path{pathname}, size{sz}
     {}
@@ -284,7 +291,8 @@ struct FsEvent<details::UVFsType::SCANDIR> {
  * functionalities.
  */
 template<>
-struct FsEvent<details::UVFsType::READLINK> {
+struct FsEvent<details::UVFsType::READLINK>
+{
     explicit FsEvent(const char *pathname, const char *buf, std::size_t sz) noexcept
         : path{pathname}, data{buf}, size{sz}
     {}
@@ -294,6 +302,44 @@ struct FsEvent<details::UVFsType::READLINK> {
     std::size_t size; /*!< The amount of data read from the given path. */
 };
 
+/**
+* @brief FsEvent event specialization for `FsRequest::Type::MKDIR`.
+*
+* It will be emitted by FsReq and/or FileReq according with their
+* functionalities.
+*/
+template<>
+struct FsEvent<details::UVFsType::MKDIR>
+{
+	const char* path;
+	explicit FsEvent(const char* pathname) noexcept : path{pathname}  {}
+};
+
+/**
+* @brief FsEvent event specialization for `FsRequest::Type::MKDTEMP`.
+*
+* It will be emitted by FsReq and/or FileReq according with their
+* functionalities.
+*/
+template<>
+struct FsEvent<details::UVFsType::MKDTEMP>
+{
+	const char* path;
+	explicit FsEvent(const char* pathname) noexcept : path{ pathname } {}
+};
+
+/**
+* @brief FsEvent event specialization for `FsRequest::Type::RMDIR`.
+*
+* It will be emitted by FsReq and/or FileReq according with their
+* functionalities.
+*/
+template<>
+struct FsEvent<details::UVFsType::RMDIR>
+{
+	const char* path;
+	explicit FsEvent(const char* pathname) noexcept : path{ pathname } {}
+};
 
 /**
  * @brief Base class for FsReq and/or FileReq.
@@ -358,7 +404,12 @@ public:
  * [documentation](http://docs.libuv.org/en/v1.x/fs.html)
  * for further details.
  */
-class FileReq final: public FsRequest<FileReq> {
+class FileReq final
+	: public FsRequest<FileReq>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::FileReq);
+private:
     static constexpr uv_file BAD_FD = -1;
 
     static void fsOpenCallback(uv_fs_t *req) {
@@ -386,7 +437,7 @@ class FileReq final: public FsRequest<FileReq> {
     static void fsReadCallback(uv_fs_t *req) {
         auto ptr = reserve(req);
         if(req->result < 0) { ptr->publish(ErrorEvent{req->result}); }
-        else { ptr->publish(FsEvent<Type::READ>{req->path, std::move(ptr->data), static_cast<std::size_t>(req->result)}); }
+        else { ptr->publish(FsEvent<Type::READ>{req->path, std::move(ptr->_data), static_cast<std::size_t>(req->result)}); }
     }
 
 public:
@@ -514,8 +565,8 @@ public:
      * @param len Length, as described in the official documentation.
      */
     void read(int64_t offset, unsigned int len) {
-        data = std::unique_ptr<char[]>{new char[len]};
-        buffer = uv_buf_init(data.get(), len);
+        _data = std::unique_ptr<char[]>{new char[len]};
+        buffer = uv_buf_init(_data.get(), len);
         uv_buf_t bufs[] = { buffer };
         cleanupAndInvoke(&uv_fs_read, parent(), get(), file, bufs, 1, offset, &fsReadCallback);
     }
@@ -534,13 +585,13 @@ public:
      */
     std::pair<bool, std::pair<std::unique_ptr<const char[]>, std::size_t>>
     readSync(int64_t offset, unsigned int len) {
-        data = std::unique_ptr<char[]>{new char[len]};
-        buffer = uv_buf_init(data.get(), len);
+        _data = std::unique_ptr<char[]>{new char[len]};
+        buffer = uv_buf_init(_data.get(), len);
         uv_buf_t bufs[] = { buffer };
         auto req = get();
         cleanupAndInvokeSync(&uv_fs_read, parent(), req, file, bufs, 1, offset);
         bool err = req->result < 0;
-        return std::make_pair(!err, std::make_pair(std::move(data), err ? 0 : std::size_t(req->result)));
+        return std::make_pair(!err, std::make_pair(std::move(_data), err ? 0 : std::size_t(req->result)));
     }
 
     /**
@@ -557,8 +608,8 @@ public:
      * @param offset Offset, as described in the official documentation.
      */
     void write(std::unique_ptr<char[]> buf, unsigned int len, int64_t offset) {
-        this->data = std::move(buf);
-        uv_buf_t bufs[] = { uv_buf_init(this->data.get(), len) };
+        this->_data = std::move(buf);
+        uv_buf_t bufs[] = { uv_buf_init(this->_data.get(), len) };
         cleanupAndInvoke(&uv_fs_write, parent(), get(), file, bufs, 1, offset, &fsResultCallback<Type::WRITE>);
     }
 
@@ -592,8 +643,8 @@ public:
      * * The amount of data written to the given path.
      */
     std::pair<bool, std::size_t> writeSync(std::unique_ptr<char[]> buf, unsigned int len, int64_t offset) {
-        this->data = std::move(buf);
-        uv_buf_t bufs[] = { uv_buf_init(this->data.get(), len) };
+        this->_data = std::move(buf);
+        uv_buf_t bufs[] = { uv_buf_init(this->_data.get(), len) };
         auto req = get();
         cleanupAndInvokeSync(&uv_fs_write, parent(), req, file, bufs, 1, offset);
         bool err = req->result < 0;
@@ -820,7 +871,7 @@ public:
     operator FileHandle() const noexcept { return file; }
 
 private:
-    std::unique_ptr<char[]> data{nullptr};
+    std::unique_ptr<char[]> _data{nullptr};
     uv_buf_t buffer{};
     uv_file file{BAD_FD};
 };
@@ -838,7 +889,12 @@ private:
  * [documentation](http://docs.libuv.org/en/v1.x/fs.html)
  * for further details.
  */
-class FsReq final: public FsRequest<FsReq> {
+class FsReq final
+	: public FsRequest<FsReq>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::FsReq);
+private:
     static void fsReadlinkCallback(uv_fs_t *req) {
         auto ptr = reserve(req);
         if(req->result < 0) { ptr->publish(ErrorEvent{req->result}); }

@@ -16,12 +16,7 @@ namespace uvw {
  *
  * It will be emitted by CheckHandle according with its functionalities.
  */
-struct CheckEvent
-	: public virtual craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::CheckEvent);
-public:
-};
+struct CheckEvent {};
 
 
 /**

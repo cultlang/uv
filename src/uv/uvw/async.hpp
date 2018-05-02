@@ -16,11 +16,7 @@ namespace uvw {
  *
  * It will be emitted by AsyncHandle according with its functionalities.
  */
-struct AsyncEvent
-	: public virtual craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::AsyncEvent);
-};
+struct AsyncEvent {};
 
 
 /**

@@ -16,7 +16,7 @@ namespace uvw {
  * This is the base class for handles and requests.
  */
 template<typename T, typename U>
-class Resource: public UnderlyingType<T, U>, public Emitter<T>, public std::enable_shared_from_this<T> {
+class Resource: public UnderlyingType<T, U>, public Emitter<T> {
 protected:
     using ConstructorAccess = typename UnderlyingType<T, U>::ConstructorAccess;
 
@@ -25,22 +25,21 @@ protected:
     }
 
     void leak() noexcept {
-        sPtr = this->shared_from_this();
+        //sPtr = this->shared_from_this();
     }
 
     void reset() noexcept {
-        sPtr.reset();
+        //sPtr.reset();
     }
 
     bool self() const noexcept {
-        return static_cast<bool>(sPtr);
+        return static_cast<bool>(this);
     }
 
 public:
-    explicit Resource(ConstructorAccess ca, std::shared_ptr<Loop> ref)
+    explicit Resource(ConstructorAccess ca, craft::instance<Loop> ref)
         : UnderlyingType<T, U>{ca, std::move(ref)},
-          Emitter<T>{},
-          std::enable_shared_from_this<T>{}
+          Emitter<T>{}
     {
         this->get()->data = static_cast<T*>(this);
     }
@@ -51,7 +50,7 @@ public:
      */
     template<typename R = void>
     craft::instance<R> data() const {
-        return std::static_pointer_cast<R>(userData);
+        return userData.asType<R>();
     }
 
     /**
@@ -59,12 +58,11 @@ public:
      * @param uData User-defined arbitrary data.
      */
     void data(craft::types::instance<> uData) {
-        userData = std::move(uData);
+        userData = uData;
     }
 
 private:
     craft::instance<> userData;
-    std::shared_ptr<void> sPtr{nullptr};
 };
 
 

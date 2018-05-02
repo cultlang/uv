@@ -20,23 +20,14 @@ namespace uvw {
  *
  * It will be emitted by StreamHandle according with its functionalities.
  */
-struct ConnectEvent
-	: public craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::ConnectEvent);
-};
-
+struct ConnectEvent {};
 
 /**
  * @brief EndEvent event.
  *
  * It will be emitted by StreamHandle according with its functionalities.
  */
-struct EndEvent
-	: public craft::types::Object
-{
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::EndEvent);
-};
+struct EndEvent {};
 
 
 /**
@@ -44,10 +35,7 @@ struct EndEvent
  *
  * It will be emitted by StreamHandle according with its functionalities.
  */
-struct ListenEvent 
-	: public craft::types::Object
-{
-};
+struct ListenEvent {};
 
 
 /**
@@ -56,6 +44,7 @@ struct ListenEvent
  * It will be emitted by StreamHandle according with its functionalities.
  */
 struct ShutdownEvent {};
+
 
 
 /**
@@ -71,7 +60,8 @@ struct WriteEvent {};
  *
  * It will be emitted by StreamHandle according with its functionalities.
  */
-struct DataEvent {
+struct DataEvent
+{
     explicit DataEvent(std::unique_ptr<char[]> buf, std::size_t len) noexcept
         : data{std::move(buf)}, length{len}
     {}
@@ -84,7 +74,12 @@ struct DataEvent {
 namespace details {
 
 
-struct ConnectReq final: public Request<ConnectReq, uv_connect_t> {
+struct ConnectReq final
+	: public Request<ConnectReq, uv_connect_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::details::ConnectReq);
+public:
     using Request::Request;
 
     template<typename F, typename... Args>
@@ -94,7 +89,12 @@ struct ConnectReq final: public Request<ConnectReq, uv_connect_t> {
 };
 
 
-struct ShutdownReq final: public Request<ShutdownReq, uv_shutdown_t> {
+struct ShutdownReq final
+	: public Request<ShutdownReq, uv_shutdown_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::details::ShutdownReq);
+public:
     using Request::Request;
 
     void shutdown(uv_stream_t *handle) {
@@ -103,11 +103,15 @@ struct ShutdownReq final: public Request<ShutdownReq, uv_shutdown_t> {
 };
 
 
-class WriteReq final: public Request<WriteReq, uv_write_t> {
+class WriteReq final
+	: public Request<WriteReq, uv_write_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::details::WriteReq);
 public:
     using Deleter = void(*)(char *);
 
-    WriteReq(ConstructorAccess ca, std::shared_ptr<Loop> loop, std::unique_ptr<char[], Deleter> dt, unsigned int len)
+    WriteReq(ConstructorAccess ca, craft::instance<Loop> loop, std::unique_ptr<char[], Deleter> dt, unsigned int len)
         : Request<WriteReq, uv_write_t>{ca, std::move(loop)},
           data{std::move(dt)},
           buf{uv_buf_init(data.get(), len)}
@@ -170,7 +174,7 @@ class StreamHandle: public Handle<T, U> {
 
 public:
 #ifdef _MSC_VER
-    StreamHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref)
+    StreamHandle(ConstructorAccess ca, craft::instance<Loop> ref)
         : Handle{ca, std::move(ref)}
     {}
 #else

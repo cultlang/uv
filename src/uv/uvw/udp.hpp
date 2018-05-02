@@ -22,9 +22,7 @@ namespace uvw {
  *
  * It will be emitted by UDPHandle according with its functionalities.
  */
-struct SendEvent
-	:
-{};
+struct SendEvent {};
 
 
 /**
@@ -60,11 +58,15 @@ enum class UVMembership: std::underlying_type_t<uv_membership> {
 };
 
 
-class SendReq final: public Request<SendReq, uv_udp_send_t> {
+class SendReq final
+	: public Request<SendReq, uv_udp_send_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::details::SendReq);
 public:
     using Deleter = void(*)(char *);
 
-    SendReq(ConstructorAccess ca, std::shared_ptr<Loop> loop, std::unique_ptr<char[], Deleter> dt, unsigned int len)
+    SendReq(ConstructorAccess ca, craft::instance<Loop> loop, std::unique_ptr<char[], Deleter> dt, unsigned int len)
         : Request<SendReq, uv_udp_send_t>{ca, std::move(loop)},
           data{std::move(dt)},
           buf{uv_buf_init(data.get(), len)}
@@ -99,7 +101,12 @@ private:
  * [documentation](http://docs.libuv.org/en/v1.x/udp.html#c.uv_udp_init_ex)
  * for further details.
  */
-class UDPHandle final: public Handle<UDPHandle, uv_udp_t> {
+class UDPHandle final
+	: public Handle<UDPHandle, uv_udp_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::UDPHandle);
+public:
     template<typename I>
     static void recvCallback(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const sockaddr *addr, unsigned flags) {
         const typename details::IpTraits<I>::Type *aptr = reinterpret_cast<const typename details::IpTraits<I>::Type *>(addr);
@@ -130,7 +137,7 @@ public:
 
     using Handle::Handle;
 
-    explicit UDPHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, unsigned int f)
+    explicit UDPHandle(ConstructorAccess ca, craft::instance<Loop> ref, unsigned int f)
         : Handle{ca, std::move(ref)}, tag{FLAGS}, flags{f}
     {}
 
@@ -321,7 +328,7 @@ public:
                         data.release(), [](char *ptr) { delete[] ptr; }
                     }, len);
 
-        auto listener = [ptr = shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = craft::instance<UDPHandle>::fromInternalPointer(this)](const auto &event, const auto &) mutable {
             ptr->publish(event);
         };
 
@@ -400,7 +407,7 @@ public:
                         data, [](char *) {}
                     }, len);
 
-        auto listener = [ptr = shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = craft::instance<UDPHandle>::fromInternalPointer(this)](const auto &event, const auto &) mutable {
             ptr->publish(event);
         };
 

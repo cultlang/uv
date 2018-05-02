@@ -31,7 +31,8 @@ enum class UVPollEvent: std::underlying_type_t<uv_poll_event> {
  *
  * It will be emitted by PollHandle according with its functionalities.
  */
-struct PollEvent {
+struct PollEvent 
+{
     explicit PollEvent(Flags<details::UVPollEvent> events) noexcept
         : flags{std::move(events)}
     {}
@@ -66,7 +67,12 @@ struct PollEvent {
  * [documentation](http://docs.libuv.org/en/v1.x/poll.html)
  * for further details.
  */
-class PollHandle final: public Handle<PollHandle, uv_poll_t> {
+class PollHandle final
+	: public Handle<PollHandle, uv_poll_t>
+	, craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::PollHandle);
+private:
     static void startCallback(uv_poll_t *handle, int status, int events) {
         PollHandle &poll = *(static_cast<PollHandle*>(handle->data));
         if(status) { poll.publish(ErrorEvent{status}); }
@@ -76,11 +82,11 @@ class PollHandle final: public Handle<PollHandle, uv_poll_t> {
 public:
     using Event = details::UVPollEvent;
 
-    explicit PollHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, int desc)
+    explicit PollHandle(ConstructorAccess ca, craft::instance<Loop> ref, int desc)
         : Handle{ca, std::move(ref)}, tag{FD}, fd{desc}
     {}
 
-    explicit PollHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, OSSocketHandle sock)
+    explicit PollHandle(ConstructorAccess ca, craft::instance<Loop> ref, OSSocketHandle sock)
         : Handle{ca, std::move(ref)}, tag{SOCKET}, socket{sock}
     {}
 

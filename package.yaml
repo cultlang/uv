@@ -19,17 +19,18 @@ platform-dependencies:
    - Iphlpapi.lib
    - Psapi.lib
    - Userenv.lib
-
+  x86_64-pc-windows-msvccoff: []
   osx_x64_clang: []
   debian_x64_gcc: []
 
-platform-compiler-flags:
-  x86_64-pc-windows-msvccoff: []
-  osx_x64_clang:
+platform-compile-flags:
+  x86_64-pc-windows-msvccoff:
+    - "/std:c++latest"
+  osx_x64_clang: 
     - "-std=c++1z"
     - "-stdlib=libc++"
     - "-Wc++11-extensions"
-  debian_x64_gcc:
+  debian_x64_gcc: 
     - "-std=gnu++1z"
     - "-pthread"
     - "-fpermissive"
@@ -37,9 +38,10 @@ platform-compiler-flags:
 platform-link-flags:
   x86_64-pc-windows-msvccoff:
     - "/ignore:4099"
-
+    
 platform-defines:
-  x86_64-pc-windows-msvccoff: {}
+  x86_64-pc-windows-msvccoff:
+    _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS: yes
   osx_x64_clang: {}
   debian_x64_gcc: {}
   

@@ -38,11 +38,17 @@ enum class UVChmodFlags: std::underlying_type_t<uv_poll_event> {
  * * An optional boolean value that indicates if this pipe will be used for
  * handle passing between processes.
  */
-class PipeHandle final: public StreamHandle<PipeHandle, uv_pipe_t> {
+class PipeHandle final
+	: public StreamHandle<PipeHandle, uv_pipe_t>
+	, craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::PipeHandle);
+private:
+
 public:
     using Chmod = details::UVChmodFlags;
 
-    explicit PipeHandle(ConstructorAccess ca, std::shared_ptr<Loop> ref, bool pass = false)
+    explicit PipeHandle(ConstructorAccess ca, craft::instance<Loop> ref, bool pass = false)
         : StreamHandle{ca, std::move(ref)}, ipc{pass}
     {}
 
@@ -90,7 +96,7 @@ public:
      * @param name A valid domain socket or named pipe.
      */
     void connect(std::string name) {
-        auto listener = [ptr = shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = craft::instance<PipeHandle>::fromInternalPointer(this)](const auto &event, const auto &) mutable {
             ptr->publish(event);
         };
 

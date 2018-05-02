@@ -54,7 +54,7 @@ protected:
     }
 
 public:
-    explicit UnderlyingType(ConstructorAccess, std::shared_ptr<Loop> ref) noexcept
+    explicit UnderlyingType(ConstructorAccess, craft::instance<Loop> ref) noexcept
         : pLoop{std::move(ref)}, resource{}
     {}
 
@@ -74,15 +74,15 @@ public:
      * @return A pointer to the newly created resource.
      */
     template<typename... Args>
-    static std::shared_ptr<T> create(Args&&... args) {
-        return std::make_shared<T>(ConstructorAccess{0}, std::forward<Args>(args)...);
+    static craft::instance<T> create(Args&&... args) {
+        return craft::instance<T>::make(ConstructorAccess{0}, std::forward<Args>(args)...);
     }
 
     /**
      * @brief Gets the loop from which the resource was originated.
      * @return A reference to a loop instance.
      */
-    Loop & loop() const noexcept { return *pLoop; }
+    Loop & loop() const noexcept { return *const_cast<Loop*>(pLoop.get()); }
 
     /**
      * @brief Gets the underlying raw data structure.
@@ -123,7 +123,7 @@ public:
     }
 
 private:
-    std::shared_ptr<Loop> pLoop;
+    craft::instance<Loop> pLoop;
     U resource;
 };
 

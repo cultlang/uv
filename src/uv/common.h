@@ -27,10 +27,11 @@
 #include <spdlog/fmt/ostr.h>
 
 
-#include "uv/uv.h"
 // Deps
 #include "util/all.h"
 #include "types/core.h"
 #include "lisp/lisp.h"
+
+#include "uvw.hpp"
 
 

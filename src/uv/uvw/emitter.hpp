@@ -21,10 +21,7 @@ namespace uvw {
  * Custom wrapper around error constants of `libuv`.
  */
 struct ErrorEvent 
-	: public virtual craft::types::Object
 {
-	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::ErrorEvent);
-public:
     template<typename U, typename = std::enable_if_t<std::is_integral<U>::value>>
     explicit ErrorEvent(U val) noexcept
         : ec{static_cast<int>(val)}
@@ -188,7 +185,7 @@ class Emitter {
         return static_cast<Handler<E>&>(*handlers[type]);
     }
 
-protected:
+public:
     template<typename E>
     void publish(E event) {
         handler<E>().publish(std::move(event), *static_cast<T*>(this));
