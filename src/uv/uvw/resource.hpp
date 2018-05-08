@@ -25,11 +25,12 @@ protected:
     }
 
     void leak() noexcept {
-        //sPtr = this->shared_from_this();
+		sPtr = ((T*)this)->craft_instance();
     }
 
     void reset() noexcept {
-        //sPtr.reset();
+		//TODO solve use of std::shared_ptr::reset
+		//sPtr = this;
     }
 
     bool self() const noexcept {
@@ -63,6 +64,7 @@ public:
 
 private:
     craft::instance<> userData;
+	craft::instance<> sPtr;
 };
 
 

@@ -62,7 +62,7 @@ struct WriteEvent {};
  */
 struct DataEvent
 {
-    explicit DataEvent(std::unique_ptr<char[]> buf, std::size_t len) noexcept
+    DataEvent(std::unique_ptr<char[]> buf, std::size_t len) noexcept
         : data{std::move(buf)}, length{len}
     {}
 
@@ -274,7 +274,7 @@ public:
                         data.release(), [](char *ptr) { delete[] ptr; }
                     }, len);
 
-        auto listener = [ptr = this->shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = ((T*)this)->craft_instance()](const auto &event, const auto &) {
             ptr->publish(event);
         };
 
@@ -301,10 +301,11 @@ public:
                         data, [](char *) {}
                     }, len);
 
-        auto listener = [ptr = this->shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = ((T*)this)->craft_instance()](const auto &event, const auto &) mutable {
             ptr->publish(event);
         };
-
+		
+		req.incref(); // TODO Reference Leak
         req->template once<ErrorEvent>(listener);
         req->template once<WriteEvent>(listener);
         req->write(this->template get<uv_stream_t>());
@@ -336,7 +337,7 @@ public:
                         data.release(), [](char *ptr) { delete[] ptr; }
                     }, len);
 
-        auto listener = [ptr = this->shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = ((T*)this)->craft_instance()](const auto &event, const auto &) {
             ptr->publish(event);
         };
 
@@ -371,7 +372,7 @@ public:
                         data, [](char *) {}
                     }, len);
 
-        auto listener = [ptr = this->shared_from_this()](const auto &event, const auto &) {
+        auto listener = [ptr = ((T*)this)->craft_instance()](const auto &event, const auto &) {
             ptr->publish(event);
         };
 

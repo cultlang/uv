@@ -34,7 +34,11 @@ struct WorkEvent {};
  * [documentation](http://docs.libuv.org/en/v1.x/threadpool.html)
  * for further details.
  */
-class WorkReq final: public Request<WorkReq, uv_work_t> {
+class WorkReq final: 
+	public Request<WorkReq, uv_work_t>
+	, public craft::types::Object
+{
+	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::WorkReq)
     using InternalTask = std::function<void(void)>;
 
     static void workCallback(uv_work_t *req) {

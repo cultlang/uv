@@ -3,18 +3,6 @@
 
 namespace cultlang {
 namespace uv {
-
-	class PromisePair
-		: public virtual craft::types::Object
-	{
-	private:
-		CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(cultlang::uv::PromisePair);
-	public:
-		craft::instance<craft::lisp::PSubroutine> fail, success;
-
-		PromisePair(craft::instance<craft::lisp::PSubroutine> fail, craft::instance<craft::lisp::PSubroutine> success);
-	};
-
 	CULTLANG_UV_EXPORTED void make_fs_bindings(craft::types::instance<craft::lisp::Module> m);
 	CULTLANG_UV_EXPORTED void make_process_bindings(craft::types::instance<craft::lisp::Module> m);
 	CULTLANG_UV_EXPORTED void make_tcp_bindings(craft::types::instance<craft::lisp::Module> m);
@@ -68,3 +56,5 @@ CRAFT_TYPE_DECLARE(CULTLANG_UV_EXPORTED, uvw::TimerEvent)
 
 CRAFT_TYPE_DECLARE(CULTLANG_UV_EXPORTED, uvw::SendEvent)
 CRAFT_TYPE_DECLARE(CULTLANG_UV_EXPORTED, uvw::UDPDataEvent)
+
+#include "uv/cult/context.h"

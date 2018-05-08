@@ -1,10 +1,12 @@
 #include "uv/common.h"
 
 #include "uv/all.h"
+#include "lisp/library/system/prelude.h"
 #include "lisp/semantics/cult/calling.h"
 
 using namespace craft;
 using namespace craft::lisp;
+using namespace cultlang::uv;
 using namespace uvw;
 
 typedef instance<uvw::Loop> t_lop;

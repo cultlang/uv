@@ -215,7 +215,7 @@ public:
      * @param addr Initialized `sockaddr_in` or `sockaddr_in6` data structure.
      */
     void connect(const sockaddr &addr) {
-        auto listener = [ptr = craft::instance<TcpHandle>::fromInternalPointer(this)](const auto &event, const auto &) mutable {
+        auto listener = [ptr = this->craft_instance()](auto &event, auto &) mutable {
             ptr->publish(event);
         };
 

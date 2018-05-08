@@ -32,33 +32,6 @@ typedef uvw::FsEvent<uvw::details::UVFsType::MKDIR> uft_mkdir;
 typedef uvw::FsEvent<uvw::details::UVFsType::MKDTEMP> uft_mkdtmp;
 typedef uvw::FsEvent<uvw::details::UVFsType::RMDIR> uft_rmdir;
 
-namespace _impl {
-	class StreamContext
-		: public types::Object
-	{
-		CRAFT_OBJECT_DECLARE(_impl::StreamContext);
-	public:
-		size_t read;
-		instance<PSubroutine> onerr;
-		instance<PSubroutine> ondata;
-		instance<PSubroutine> ondone;
-		instance<> ctx;
-
-		StreamContext(instance<PSubroutine> e, instance<PSubroutine> r, instance<PSubroutine> d)
-		{
-			read = 0;
-			onerr = e;
-			ondata = r;
-			ondone = d;
-		}
-	};
-}
-
-CRAFT_DEFINE(_impl::StreamContext)
-{
-	_.defaults();
-}
-
 
 void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> m)
 {
@@ -276,26 +249,29 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 	{
 		auto fileReq = loop->resource<uvw::FileReq>();
 
-		fileReq->data(instance<_impl::StreamContext>::make(f, s, d));
+		fileReq->data(instance<FSContext>::make(f, s, d));
 
 		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<_impl::StreamContext>()->onerr;
+			auto sub = hndl.data<FSContext>()->onerr;
 			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
 		});
 		
 		fileReq->on<uclos>([](uclos &ev, auto &hndl) {
-			auto sub = hndl.data<_impl::StreamContext>()->ondone;
+			auto sub = hndl.data<FSContext>()->ondone;
 			sub->execute(sub, { hndl.craft_instance() });
 		});
 		fileReq->on<uft_read>([b](uft_read &ev, uvw::FileReq &hndl) mutable {
-			auto ctx = hndl.data<_impl::StreamContext>();
+			auto ctx = hndl.data<FSContext>();
 			auto sub = ctx->ondata;
 			if (ev.size == 0)
 			{
 				hndl.close();
 				return;
 			}
-			auto ret = sub->execute(sub, { instance<uft_read>::make(ev.path, std::move(ev.data), ev.size), hndl.craft_instance() });
+			auto ret = sub->execute(sub, { 
+				instance<uft_read>::make(ev.path, std::move(ev.data), ev.size), 
+				hndl.craft_instance() 
+			});
 			
 			ctx->read += ev.size;
 			hndl.read(ctx->read, uint32_t(*b));
@@ -312,23 +288,23 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 	});
 
 	semantics->builtin_implementMultiMethod("uv/write",
-		[](t_lop loop, t_str filename, t_i64 b, t_sub f, t_sub s, t_sub d)
+		[](t_lop loop, t_str filename, t_sub f, t_sub s, t_sub d)
 	{
 		auto fileReq = loop->resource<uvw::FileReq>();
 
-		fileReq->data(instance<_impl::StreamContext>::make(f, s, d));
+		fileReq->data(instance<FSContext>::make(f, s, d));
 
 		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<_impl::StreamContext>()->onerr;
+			auto sub = hndl.data<FSContext>()->onerr;
 			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
 		});
 
 		fileReq->on<uclos>([](uclos &ev, auto &hndl) {
-			auto sub = hndl.data<_impl::StreamContext>()->ondone;
+			auto sub = hndl.data<FSContext>()->ondone;
 			sub->execute(sub, { hndl.craft_instance() });
 		});
-		fileReq->on<uft_write>([b](uft_write &ev, uvw::FileReq &hndl) mutable {
-			auto ctx = hndl.data<_impl::StreamContext>();
+		fileReq->on<uft_write>([](uft_write &ev, uvw::FileReq &hndl) mutable {
+			auto ctx = hndl.data<FSContext>();
 			auto sub = ctx->ondata;
 			ctx->ctx = sub->execute(sub, { hndl.craft_instance() });
 
@@ -358,8 +334,8 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 			}
 		});
 
-		fileReq->on<uft_open>([b](const auto &, uvw::FileReq &hndl) {
-			auto ctx = hndl.data<_impl::StreamContext>();
+		fileReq->on<uft_open>([](const auto &, uvw::FileReq &hndl) {
+			auto ctx = hndl.data<FSContext>();
 			auto sub = ctx->ondata;
 			ctx->ctx = sub->execute(sub, { hndl.craft_instance() });
 
@@ -389,7 +365,7 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 			}
 		});
 
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::RDONLY>();
+		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::WRONLY, uvw::FileReq::FileOpen::CREAT>();
 		fileReq->open(*filename, flags, 0644);
 
 		return fileReq;

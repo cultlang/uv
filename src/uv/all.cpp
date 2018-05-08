@@ -639,13 +639,28 @@ CRAFT_TYPE_DEFINE(uvw::DataEvent)
 	_.add<GraphPropertyCppName>("uvw::DataEvent");
 	_.use<PStringer>().singleton<FunctionalStringer>(
 		[](::craft::instance<uvw::DataEvent> _this) {
-		return std::string("DataEvent");
+		return std::string(_this->data.get(), _this->length);
 	});
 	_.use<PRepr>().singleton<FunctionalRepr>(
 		[](::craft::instance<uvw::DataEvent> _this) {
 		return std::string("(DataEvent)");
 	});
 	_.use<PConstructor>().singleton<DefaultConstructor>();
+}
+
+CRAFT_DEFINE(uvw::details::ConnectReq)
+{
+	_.defaults();
+}
+
+CRAFT_DEFINE(uvw::details::ShutdownReq)
+{
+	_.defaults();
+}
+
+CRAFT_DEFINE(uvw::details::WriteReq)
+{
+	_.defaults();
 }
 
 // tcp.hpp
@@ -725,14 +740,10 @@ CRAFT_DEFINE(uvw::UDPHandle)
 #pragma endregion comment
 
 
-CRAFT_DEFINE(PromisePair) { _.defaults(); }
 
-PromisePair::PromisePair(instance<craft::lisp::PSubroutine> f, instance<craft::lisp::PSubroutine> s)
-	: fail(f)
-	, success(s)
-{
 
-}
+
+
 
 void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
 {
@@ -752,6 +763,7 @@ void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
 
 	make_fs_bindings(m);
 	make_process_bindings(m);
+	make_stream_bindings(m);
 	make_tcp_bindings(m);
 	make_util_bindings(m);
 }
