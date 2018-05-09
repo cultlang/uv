@@ -116,6 +116,38 @@ std::string test_tcp = (R"f(
 (uv/run loop)
 )f");
 
+std::string test_pipe = (R"f(
+(define loop (uv/loop))
+(define stdin (uv/stdin loop))
+
+(define pHandlers (uv/stream))
+(uv/stream/error pHandlers (function (ev stdin)
+  (do
+    (print ev) 
+  )
+
+))
+(uv/stream/data pHandlers (function (ev stdin)
+  (print ev)
+))
+
+(uv/stream/close pHandlers (function (ev stdin)
+  (do
+    (print "Peer Close")
+  )
+  
+))
+(uv/stream/end pHandlers (function (ev client)
+  (do
+    (print "Peer End")
+  )
+))
+
+(uv/stream/context stdin pHandlers)
+(uv/stream/read stdin)
+(uv/run loop)
+)f");
+
 int main(int argc, char** argv) {
 	types::boot();
 	instance<Environment> global_env = instance<Environment>::make(spdlog::stdout_color_mt("environment"));
@@ -135,7 +167,7 @@ int main(int argc, char** argv) {
 	try
 	{
 		auto statement_loader = instance<AnonLoader>::make();
-		statement_loader->setContent(instance<std::string>::make(test_tcp));
+		statement_loader->setContent(instance<std::string>::make(test_pipe));
 		statement_loader->setModule(live_module);
 		statement = ns->requireModule("anon:repl", statement_loader);
 	}

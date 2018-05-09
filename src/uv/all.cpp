@@ -763,8 +763,11 @@ void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
 
 	make_fs_bindings(m);
 	make_process_bindings(m);
+
+	make_pipe_bindings(m);
 	make_stream_bindings(m);
 	make_tcp_bindings(m);
+	make_tty_bindings(m);
 	make_util_bindings(m);
 }
 #include "types/dll_entry.inc"

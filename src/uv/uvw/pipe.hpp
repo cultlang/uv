@@ -40,7 +40,7 @@ enum class UVChmodFlags: std::underlying_type_t<uv_poll_event> {
  */
 class PipeHandle final
 	: public StreamHandle<PipeHandle, uv_pipe_t>
-	, craft::types::Object
+	, public craft::types::Object
 {
 	CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(uvw::PipeHandle);
 private:

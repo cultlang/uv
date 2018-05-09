@@ -13,19 +13,19 @@ typedef instance<StreamContext> t_sC;
 typedef instance<std::string> t_str;
 typedef instance<uint32_t> t_u32;
 typedef instance<craft::lisp::PSubroutine> t_sub;
-typedef instance<uvw::TcpHandle> t_tH;
+typedef instance<uvw::TTYHandle> t_tH;
 
 #define lMM semantics->builtin_implementMultiMethod
-#define uVT "uv/tcp"
+#define uVP "uv/tty"
 
-void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module> m)
+void cultlang::uv::make_tty_bindings(craft::types::instance<craft::lisp::Module> m)
 {
 	auto semantics = m->require<lisp::CultSemantics>();
 
-	lMM(uVT, [](t_lop l) {
-		auto request = l->resource<uvw::TcpHandle>();
+	lMM(uVP, [](t_lop l, t_u32 fds) {
+		auto request = l->resource<uvw::TTYHandle>((*fds), (*fds) ? false: true);
 
-		request->on<uvw::ErrorEvent>([](const uvw::ErrorEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::ErrorEvent>([](const uvw::ErrorEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onerr)
@@ -34,7 +34,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::ConnectEvent>([](uvw::ConnectEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::ConnectEvent>([](uvw::ConnectEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onconnect)
@@ -43,7 +43,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::CloseEvent>([](const uvw::CloseEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::CloseEvent>([](const uvw::CloseEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onclose)
@@ -52,7 +52,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::EndEvent>([](const uvw::EndEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::EndEvent>([](const uvw::EndEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onend)
@@ -61,7 +61,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::ListenEvent>([](const uvw::ListenEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::ListenEvent>([](const uvw::ListenEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onlisten)
@@ -70,7 +70,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::ShutdownEvent>([](const uvw::ShutdownEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::ShutdownEvent>([](const uvw::ShutdownEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onshutdown)
@@ -79,7 +79,7 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::WriteEvent>([](const uvw::WriteEvent & e, uvw::TcpHandle &srv)
+		request->on<uvw::WriteEvent>([](const uvw::WriteEvent & e, uvw::TTYHandle &srv)
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->onwrite)
@@ -88,26 +88,17 @@ void cultlang::uv::make_tcp_bindings(craft::types::instance<craft::lisp::Module>
 			}
 		});
 
-		request->on<uvw::DataEvent>([](uvw::DataEvent & e, uvw::TcpHandle &srv) mutable
+		request->on<uvw::DataEvent>([](uvw::DataEvent & e, uvw::TTYHandle &srv) mutable
 		{
 			auto data = srv.data<StreamContext>();
 			if (data->ondata)
 			{
-				data->ondata->execute(data->ondata, { 
+				data->ondata->execute(data->ondata, {
 					instance<uvw::DataEvent>::make(std::move(e.data), e.length),
-					srv.craft_instance() 
-				});
+					srv.craft_instance()
+					});
 			}
 		});
-
 		return request;
-	});
-	
-	lMM(uVT"/bind", [](t_tH server, t_str iface, t_u32 port) { 
-		server->bind(*iface, *port);
-		server->listen();
-	});
-	lMM(uVT"/connect", [](t_tH client, t_str iface, t_u32 port) { 
-		client->connect(*iface, *port);
 	});
 }

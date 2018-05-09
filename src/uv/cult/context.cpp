@@ -17,6 +17,9 @@ typedef instance<uvw::Loop> t_lop;
 typedef instance<StreamContext> t_sC;
 typedef instance<lisp::PSubroutine> t_pS;
 typedef instance<std::string> t_str;
+typedef instance<uvw::PipeHandle> t_pip;
+typedef instance<uvw::TcpHandle> t_tcp;
+typedef instance<uvw::TTYHandle> t_tty;
 typedef instance<int64_t> t_i64;
 
 typedef instance<craft::lisp::PSubroutine> t_sub;
@@ -65,4 +68,31 @@ void uv::make_stream_bindings(craft::types::instance<craft::lisp::Module> m)
 
 	lMM(uVS"/data", [](t_sC s) { return s->ondata; });
 	lMM(uVS"/data", [](t_sC s, t_pS p) { s->ondata = p; });
+
+	lMM(uVS"/context", [](instance<uvw::TcpHandle> h) {return h->data<StreamContext>(); });
+	lMM(uVS"/context", [](instance<uvw::TcpHandle> h, t_sC c) {return h->data(c); });
+
+	lMM(uVS"/context", [](instance<uvw::PipeHandle> h) {return h->data<StreamContext>(); });
+	lMM(uVS"/context", [](instance<uvw::PipeHandle> h, t_sC c) {return h->data(c); });
+
+	lMM(uVS"/context", [](instance<uvw::TTYHandle> h) {return h->data<StreamContext>(); });
+	lMM(uVS"/context", [](instance<uvw::TTYHandle> h, t_sC c) {return h->data(c); });
+
+	lMM(uVS"/accept", [](t_pip server, t_pip client) {server->accept(*client);});
+	lMM(uVS"/listen", [](t_pip server) {server->listen();});
+	lMM(uVS"/read", [](t_pip hnd) {hnd->read();});
+	lMM(uVS"/write", [](t_pip hnd, t_str d) {hnd->write(d->data(), d->size());});
+	lMM("uv/close", [](t_pip hnd) {hnd->close();});
+
+	lMM(uVS"/accept", [](t_tcp server, t_tcp client) {server->accept(*client); });
+	lMM(uVS"/listen", [](t_tcp server) {server->listen(); });
+	lMM(uVS"/read", [](t_tcp hnd) {hnd->read(); });
+	lMM(uVS"/write", [](t_tcp hnd, t_str d) {hnd->write(d->data(), d->size()); });
+	lMM("uv/close", [](t_tcp hnd) {hnd->close(); });
+
+	lMM(uVS"/accept", [](t_tty server, t_tty client) {server->accept(*client); });
+	lMM(uVS"/listen", [](t_tty server) {server->listen(); });
+	lMM(uVS"/read", [](t_tty hnd) {hnd->read(); });
+	lMM(uVS"/write", [](t_tty hnd, t_str d) {hnd->write(d->data(), d->size()); });
+	lMM("uv/close", [](t_tty hnd) {hnd->close(); });
 }
