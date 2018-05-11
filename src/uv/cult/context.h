@@ -1,3 +1,4 @@
+#pragma once
 #include "uv/common.h"
 
 namespace cultlang {
@@ -14,26 +15,33 @@ namespace uv {
 		PromisePair(craft::instance<craft::lisp::PSubroutine> fail, craft::instance<craft::lisp::PSubroutine> success);
 	};
 
-	class FSContext
+	class FileRequestContext
 		: public virtual craft::types::Object
 	{
-		CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(cultlang::uv::FSContext);
+		CULTLANG_UV_EXPORTED CRAFT_OBJECT_DECLARE(cultlang::uv::FileRequestContext);
 	public:
 		size_t read;
-		craft::instance<craft::lisp::PSubroutine> onerr;
-		craft::instance<craft::lisp::PSubroutine> ondata;
-		craft::instance<craft::lisp::PSubroutine> ondone;
 		craft::instance<> ctx;
 
-		inline FSContext(craft::instance<craft::lisp::PSubroutine> e, craft::instance<craft::lisp::PSubroutine> r, craft::instance<craft::lisp::PSubroutine> d)
-		{
-			read = 0;
-			onerr = e;
-			ondata = r;
-			ondone = d;
-		}
+		
+		craft::instance<craft::lisp::PSubroutine> onchmod;
+		craft::instance<craft::lisp::PSubroutine> onerr;
+		craft::instance<craft::lisp::PSubroutine> onopen;
+		craft::instance<craft::lisp::PSubroutine> onclose;
+		craft::instance<craft::lisp::PSubroutine> onread;
+		craft::instance<craft::lisp::PSubroutine> onwrite;
+		craft::instance<craft::lisp::PSubroutine> onsend;
+		craft::instance<craft::lisp::PSubroutine> onstat;
+		craft::instance<craft::lisp::PSubroutine> onfstat;
+		craft::instance<craft::lisp::PSubroutine> onlstat;
+		craft::instance<craft::lisp::PSubroutine> onsync;
+		craft::instance<craft::lisp::PSubroutine> ontruncate;
+		
+
+		CULTLANG_UV_EXPORTED FileRequestContext();
 
 	};
+
 
 	class StreamContext
 		: public virtual craft::types::Object

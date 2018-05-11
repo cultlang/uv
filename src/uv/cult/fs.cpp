@@ -3,20 +3,39 @@
 #include "uv/all.h"
 #include "lisp/library/system/prelude.h"
 #include "lisp/semantics/cult/calling.h"
+#include "context.h"
 
 using namespace craft;
 using namespace craft::types;
 using namespace craft::lisp;
 using namespace uvw;
+using namespace cultlang;
+using namespace cultlang::uv;
 
+CRAFT_DEFINE(cultlang::uv::FileRequestContext)
+{
+	_.defaults();
+}
+
+uv::FileRequestContext::FileRequestContext()
+{
+
+}
 
 typedef instance<uvw::Loop> t_lop;
 typedef instance<std::string> t_str;
 typedef instance<int64_t> t_i64;
+typedef instance<int64_t> t_i32;
+typedef instance<uint8_t> t_u8;
 typedef instance<craft::lisp::PSubroutine> t_sub;
+typedef instance<uv::FileRequestContext> t_fictx;
+typedef instance<uvw::FsReq> t_fsreq;
+typedef instance<uvw::FileReq> t_fireq;
 
 typedef uvw::ErrorEvent uerr;
 typedef uvw::CloseEvent uclos;
+
+
 
 typedef uvw::FsEvent<uvw::details::UVFsType::OPEN> uft_open;
 typedef uvw::FsEvent<uvw::details::UVFsType::CLOSE> uft_close;
@@ -32,342 +51,178 @@ typedef uvw::FsEvent<uvw::details::UVFsType::MKDIR> uft_mkdir;
 typedef uvw::FsEvent<uvw::details::UVFsType::MKDTEMP> uft_mkdtmp;
 typedef uvw::FsEvent<uvw::details::UVFsType::RMDIR> uft_rmdir;
 
+#define lMM semantics->builtin_implementMultiMethod
+#define uVF "uv/fs"
 
 void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> m)
 {
 	auto semantics = m->require<CultSemantics>();
-#pragma region uv/mkdir
-	semantics->builtin_implementMultiMethod("uv/mkdir",
-		[](t_lop loop, t_str dir, t_sub f, t_sub s)
-	{
-		auto request = loop->resource<uvw::FsReq>();
+	
+#pragma region ctx
+	lMM(uVF"/file/ctx", []() {return t_fictx::make();});
 
-		request->data(instance<PromisePair>::make(f, s));
+	lMM(uVF"ctx/error", [](t_fictx s) { return s->onerr; });
+	lMM(uVF"ctx/error", [](t_fictx s, t_sub p) { s->onerr = p; });
 
-		request->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
+	lMM(uVF"ctx/close", [](t_fictx s) { return s->onclose; });
+	lMM(uVF"ctx/close", [](t_fictx s, t_sub p) { s->onclose = p; });
 
-		request->on<uft_mkdir>([](uft_mkdir &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_mkdir>::make(ev.path), hndl.craft_instance() });
-		});
+	lMM(uVF"ctx/read", [](t_fictx s) { return s->onread; });
+	lMM(uVF"ctx/read", [](t_fictx s, t_sub p) { s->onread = p; });
 
-		request->mkdir(*dir, 0755);
+	lMM(uVF"ctx/write", [](t_fictx s) { return s->onwrite; });
+	lMM(uVF"ctx/write", [](t_fictx s, t_sub p) { s->onwrite = p; });
 
-		return request;
-	});
-	semantics->builtin_implementMultiMethod("uv/rmdir",
-	[](t_lop loop, t_str dir, t_sub f, t_sub s)
-	{
-		auto request = loop->resource<uvw::FsReq>();
+	lMM(uVF"ctx/send", [](t_fictx s) { return s->onsend; });
+	lMM(uVF"ctx/send", [](t_fictx s, t_sub p) { s->onsend = p; });
 
-		request->data(instance<PromisePair>::make(f, s));
+	lMM(uVF"ctx/stat", [](t_fictx s) { return s->onstat; });
+	lMM(uVF"ctx/stat", [](t_fictx s, t_sub p) { s->onstat = p; });
 
-		request->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
+	lMM(uVF"ctx/fstat", [](t_fictx s) { return s->onfstat; });
+	lMM(uVF"ctx/fstat", [](t_fictx s, t_sub p) { s->onfstat = p; });
 
-		request->on<uft_rmdir>([](uft_rmdir &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_rmdir>::make(ev.path), hndl.craft_instance() });
-		});
+	lMM(uVF"ctx/lstat", [](t_fictx s) { return s->onlstat; });
+	lMM(uVF"ctx/lstat", [](t_fictx s, t_sub p) { s->onlstat = p; });
 
-		request->rmdir(*dir);
+	lMM(uVF"ctx/sync", [](t_fictx s) { return s->onsync; });
+	lMM(uVF"ctx/sync", [](t_fictx s, t_sub p) { s->onsync = p; });
 
-		return request;
-	});
-	semantics->builtin_implementMultiMethod("uv/mkdirtmp",
-		[](t_lop loop, t_str dir, t_sub f, t_sub s)
-	{
-		auto request = loop->resource<uvw::FsReq>();
-
-		request->data(instance<PromisePair>::make(f, s));
+	lMM(uVF, [](t_lop l, t_fictx ctx) {
+		auto request = l->resource<uvw::FileReq>();
 
 		request->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if(sub->onerr)
+			{
+				sub->onerr->execute(sub->onerr, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
+			}
 		});
-
-		request->on<uft_mkdtmp>([](uft_mkdtmp &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_mkdtmp>::make(ev.path), hndl.craft_instance() });
+		request->on<uclos>([](uclos &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onclose)
+			{
+				sub->onclose->execute(sub->onclose, { instance<uclos>::make(), hndl.craft_instance() });
+			}
 		});
-
-		request->mkdtemp(*dir);
-
-		return request;
-	});
-#pragma endregion Directory Ops
-
-#pragma region uv/stat
-	semantics->builtin_implementMultiMethod("uv/stat",
-		[](t_lop loop, t_str filename, t_sub f, t_sub s)
-	{
-		auto fileReq = loop->resource<uvw::FileReq>();
-		auto fsReq = loop->resource<uvw::FsReq>();
-
-		fileReq->data(instance<PromisePair>::make(f, s));
-		fsReq->data(instance<PromisePair>::make(f, s));
-
-		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
+		request->on<uft_open>([](uft_open &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onopen)
+			{
+				sub->onopen->execute(sub->onopen, { instance<uft_open>::make(ev.path), hndl.craft_instance() });
+			}
 		});
-		fsReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
+		request->on<uft_write>([](uft_write &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onwrite)
+			{
+				sub->onwrite->execute(sub->onwrite, { instance<uft_write>::make(ev.path, ev.size), hndl.craft_instance() });
+			}
 		});
-
-		fsReq->on<uft_stat>([](uft_stat &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_stat>::make(ev.path, ev.stat), hndl.craft_instance() });
+		request->on<uft_send>([](uft_send &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onsend)
+			{
+				sub->onsend->execute(sub->onsend, { instance<uft_send>::make(ev.path, ev.size), hndl.craft_instance() });
+			}
 		});
-
-		fileReq->on<uft_close>([fsReq, filename](auto &ev, auto &hndl) mutable {
-			fsReq->stat(*filename);
+		request->on<uft_stat>([](uft_stat &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onstat)
+			{
+				sub->onstat->execute(sub->onstat, { instance<uft_stat>::make(ev.path, ev.stat), hndl.craft_instance() });
+			}
 		});
-
-		fileReq->on<uft_open>([](const auto &, auto &request) {
-			request.close();
+		request->on<uft_fstat>([](uft_fstat &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onfstat)
+			{
+				sub->onfstat->execute(sub->onfstat, { instance<uft_fstat>::make(ev.path, ev.stat), hndl.craft_instance() });
+			}
 		});
-
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::RDONLY>();
-		fileReq->open(*filename, flags, 0644);
-
-		return fsReq;
-	});
-
-	semantics->builtin_implementMultiMethod("uv/fstat",
-		[](t_lop loop, t_str filename, t_sub f, t_sub s)
-	{
-		auto fileReq = loop->resource<uvw::FileReq>();
-		auto fsReq = loop->resource<uvw::FsReq>();
-
-		fileReq->data(instance<PromisePair>::make(f, s));
-		fsReq->data(instance<PromisePair>::make(f, s));
-
-		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
-		fsReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
-
-		fsReq->on<uft_fstat>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_fstat>::make(ev.path, ev.stat), hndl.craft_instance() });
-		});
-
-		fileReq->on<uft_close>([fsReq, filename](auto &ev, auto &hndl) mutable {
-			fsReq->stat(*filename);
-		});
-
-		fileReq->on<uft_open>([](const auto &, auto &request) {
-			request.close();
-		});
-
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::RDONLY>();
-		fileReq->open(*filename, flags, 0644);
-
-		return fsReq;
-	});
-
-	semantics->builtin_implementMultiMethod("uv/lstat",
-		[](t_lop loop, t_str filename, t_sub f, t_sub s)
-	{
-		auto fileReq = loop->resource<uvw::FileReq>();
-		auto fsReq = loop->resource<uvw::FsReq>();
-
-		fileReq->data(instance<PromisePair>::make(f, s));
-		fsReq->data(instance<PromisePair>::make(f, s));
-
-		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
-		fsReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
-
-		fsReq->on<uft_fstat>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
-			sub->execute(sub, { instance<uft_lstat>::make(ev.path, ev.stat), hndl.craft_instance() });
-		});
-
-		fileReq->on<uft_close>([fsReq, filename](auto &ev, auto &hndl) mutable {
-			fsReq->stat(*filename);
-		});
-
-		fileReq->on<uft_open>([](const auto &, auto &request) {
-			request.close();
-		});
-
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::RDONLY>();
-		fileReq->open(*filename, flags, 0644);
-
-		return fsReq;
-	});
-
-
-	// Stat Retrival Ops
-	typedef instance<uvw::FsEvent<uvw::FsReq::Type::STAT>> t_fse_st;
-	semantics->builtin_implementMultiMethod("uv/stat/dev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_dev); });
-	semantics->builtin_implementMultiMethod("uv/stat/mode", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mode); });
-	semantics->builtin_implementMultiMethod("uv/stat/nlink", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_nlink); });
-	semantics->builtin_implementMultiMethod("uv/stat/uid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_uid); });
-	semantics->builtin_implementMultiMethod("uv/stat/gid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gid); });
-	semantics->builtin_implementMultiMethod("uv/stat/rdev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_rdev); });
-	semantics->builtin_implementMultiMethod("uv/stat/ino", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ino); });
-	semantics->builtin_implementMultiMethod("uv/stat/size", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_size); });
-	semantics->builtin_implementMultiMethod("uv/stat/blksize", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blksize); });
-	semantics->builtin_implementMultiMethod("uv/stat/blocks", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blocks); });
-	semantics->builtin_implementMultiMethod("uv/stat/flags", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_flags); });
-	semantics->builtin_implementMultiMethod("uv/stat/gen", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gen); });
-
-	semantics->builtin_implementMultiMethod("uv/stat/atim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_sec); });
-	semantics->builtin_implementMultiMethod("uv/stat/atim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_nsec); });
-
-	semantics->builtin_implementMultiMethod("uv/stat/mtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_sec); });
-	semantics->builtin_implementMultiMethod("uv/stat/mtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_nsec); });
-
-	semantics->builtin_implementMultiMethod("uv/stat/ctim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_sec); });
-	semantics->builtin_implementMultiMethod("uv/stat/ctim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_nsec); });
-
-	semantics->builtin_implementMultiMethod("uv/stat/birthtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_sec); });
-	semantics->builtin_implementMultiMethod("uv/stat/brithtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_nsec); });
-
-#pragma endregion Stat Stuff
-
-	semantics->builtin_implementMultiMethod("uv/read",
-		[](t_lop loop, t_str filename, t_i64 b, t_sub f, t_sub s, t_sub d)
-	{
-		auto fileReq = loop->resource<uvw::FileReq>();
-
-		fileReq->data(instance<FSContext>::make(f, s, d));
-
-		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<FSContext>()->onerr;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
+		request->on<uft_lstat>([](uft_lstat &ev, auto &hndl) {
+			auto sub = hndl.data<uv::FileRequestContext>();
+			if (sub->onlstat)
+			{
+				sub->onlstat->execute(sub->onlstat, { instance<uft_lstat>::make(ev.path, ev.stat), hndl.craft_instance() });
+			}
 		});
 		
-		fileReq->on<uclos>([](uclos &ev, auto &hndl) {
-			auto sub = hndl.data<FSContext>()->ondone;
-			sub->execute(sub, { hndl.craft_instance() });
-		});
-		fileReq->on<uft_read>([b](uft_read &ev, uvw::FileReq &hndl) mutable {
-			auto ctx = hndl.data<FSContext>();
-			auto sub = ctx->ondata;
-			if (ev.size == 0)
-			{
-				hndl.close();
-				return;
-			}
-			auto ret = sub->execute(sub, { 
-				instance<uft_read>::make(ev.path, std::move(ev.data), ev.size), 
-				hndl.craft_instance() 
-			});
-			
-			ctx->read += ev.size;
-			hndl.read(ctx->read, uint32_t(*b));
-		});
+	});
+	// Stat Retrival Ops
+	typedef instance<uvw::FsEvent<uvw::FsReq::Type::STAT>> t_fse_st;
+	lMM(uVF"/stat/dev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_dev); });
+	lMM(uVF"/stat/mode", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mode); });
+	lMM(uVF"/stat/nlink", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_nlink); });
+	lMM(uVF"/stat/uid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_uid); });
+	lMM(uVF"/stat/gid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gid); });
+	lMM(uVF"/stat/rdev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_rdev); });
+	lMM(uVF"/stat/ino", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ino); });
+	lMM(uVF"/stat/size", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_size); });
+	lMM(uVF"/stat/blksize", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blksize); });
+	lMM(uVF"/stat/blocks", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blocks); });
+	lMM(uVF"/stat/flags", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_flags); });
+	lMM(uVF"/stat/gen", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gen); });
 
-		fileReq->on<uft_open>([b](const auto &, uvw::FileReq &hndl) {
-			hndl.read(0, uint32_t(*b));
-		});
+	lMM(uVF"/stat/atim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_sec); });
+	lMM(uVF"/stat/atim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_nsec); });
 
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::RDONLY>();
-		fileReq->open(*filename, flags, 0644);
+	lMM(uVF"/stat/mtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_sec); });
+	lMM(uVF"/stat/mtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_nsec); });
 
-		return fileReq;
+	lMM(uVF"/stat/ctim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_sec); });
+	lMM(uVF"/stat/ctim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_nsec); });
+
+	lMM(uVF"/stat/birthtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_sec); });
+	lMM(uVF"/stat/birthtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_nsec); });
+
+	lMM(uVF"/chmod", [](t_fireq r, t_i32 p) {r->chmod(*p); });
+	lMM(uVF"/chmodSync", [](t_fireq r, t_i32 p) {r->chmodSync(*p); });
+	lMM(uVF"/chmod", [](t_fireq r, t_u8 p, t_u8 g) {r->chown(*p, *g); });
+	lMM(uVF"/chmodSync", [](t_fireq r, t_u8 p, t_u8 g) {r->chownSync(*p, *g); });
+	lMM(uVF"/close", [](t_fireq r) {r->close(); });
+	lMM(uVF"/closeSync", [](t_fireq r) {r->closeSync(); });
+	lMM(uVF"/datasync", [](t_fireq r) {r->datasync(); });
+	lMM(uVF"/datasyncSync", [](t_fireq r) {r->datasyncSync(); });
+
+	lMM(uVF"/open", [](t_fireq r, t_str p, t_i32 f, t_i32 m) {r->open(*p, *m, *m); });
+
+	lMM(uVF"/openflags/APPEND", []() { return t_i32::make((int32_t)FileReq::FileOpen::APPEND); });
+	lMM(uVF"/openflags/CREAT", []() { return t_i32::make((int32_t)FileReq::FileOpen::CREAT); });
+	lMM(uVF"/openflags/DIRECT", []() { return t_i32::make((int32_t)FileReq::FileOpen::DIRECT); });
+	lMM(uVF"/openflags/DIRECTORY", []() { return t_i32::make((int32_t)FileReq::FileOpen::DIRECTORY); });
+	lMM(uVF"/openflags/DSYNC", []() { return t_i32::make((int32_t)FileReq::FileOpen::DSYNC); });
+	lMM(uVF"/openflags/EXCL", []() { return t_i32::make((int32_t)FileReq::FileOpen::EXCL); });
+	lMM(uVF"/openflags/EXLOCK", []() { return t_i32::make((int32_t)FileReq::FileOpen::EXLOCK); });
+	lMM(uVF"/openflags/NOATIME", []() { return t_i32::make((int32_t)FileReq::FileOpen::NOATIME); });
+	lMM(uVF"/openflags/NOCTTY", []() { return t_i32::make((int32_t)FileReq::FileOpen::NOCTTY); });
+	lMM(uVF"/openflags/NOFOLLOW", []() { return t_i32::make((int32_t)FileReq::FileOpen::NOFOLLOW); });
+	lMM(uVF"/openflags/NONBLOCK", []() { return t_i32::make((int32_t)FileReq::FileOpen::NONBLOCK); });
+	lMM(uVF"/openflags/RANDOM", []() { return t_i32::make((int32_t)FileReq::FileOpen::RANDOM); });
+	lMM(uVF"/openflags/RDONLY", []() { return t_i32::make((int32_t)FileReq::FileOpen::RDONLY); });
+	lMM(uVF"/openflags/RDWR", []() { return t_i32::make((int32_t)FileReq::FileOpen::RDWR); });
+	lMM(uVF"/openflags/SEQUENTIAL", []() { return t_i32::make((int32_t)FileReq::FileOpen::SEQUENTIAL); });
+	lMM(uVF"/openflags/SHORT_LIVED", []() { return t_i32::make((int32_t)FileReq::FileOpen::SHORT_LIVED); });
+	lMM(uVF"/openflags/SYMLINK", []() { return t_i32::make((int32_t)FileReq::FileOpen::SYMLINK); });
+	lMM(uVF"/openflags/SYNC", []() { return t_i32::make((int32_t)FileReq::FileOpen::SYNC); });
+	lMM(uVF"/openflags/TEMPORARY", []() { return t_i32::make((int32_t)FileReq::FileOpen::TEMPORARY); });
+	lMM(uVF"/openflags/TRUNC", []() { return t_i32::make((int32_t)FileReq::FileOpen::WRONLY); });
+
+	lMM(uVF"/openflags", [](types::VarArgs<instance<>> args) { 
+		int32_t res;
+		for (auto i : args.args)
+		{
+			if (!i.isType<int32_t>()) throw stdext::exception("Arguments must be int32s");
+			res = res | *i.asType<int32_t>();
+		}
+		return instance<int32_t>::make(res);
 	});
 
-	semantics->builtin_implementMultiMethod("uv/write",
-		[](t_lop loop, t_str filename, t_sub f, t_sub s, t_sub d)
-	{
-		auto fileReq = loop->resource<uvw::FileReq>();
-
-		fileReq->data(instance<FSContext>::make(f, s, d));
-
-		fileReq->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<FSContext>()->onerr;
-			sub->execute(sub, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
-		});
-
-		fileReq->on<uclos>([](uclos &ev, auto &hndl) {
-			auto sub = hndl.data<FSContext>()->ondone;
-			sub->execute(sub, { hndl.craft_instance() });
-		});
-		fileReq->on<uft_write>([](uft_write &ev, uvw::FileReq &hndl) mutable {
-			auto ctx = hndl.data<FSContext>();
-			auto sub = ctx->ondata;
-			ctx->ctx = sub->execute(sub, { hndl.craft_instance() });
-
-			if (!ctx->ctx)
-			{
-				hndl.close();
-			}
-			else if (ctx->ctx.isType<std::string>())
-			{
-				auto& str = ctx->ctx.asType<std::string>();
-				hndl.write(str->data(), uint32_t(str->size()), ctx->read);
-				ctx->read = str->size();
-			}
-			else if (ctx->ctx.isType<lisp::library::Buffer>())
-			{
-				auto& buf = ctx->ctx.asType<lisp::library::Buffer>();
-
-				hndl.write((char*)buf->data().data(), uint32_t(buf->data().size()), ctx->read);
-				ctx->read = uint32_t(*buf->size());
-			}
-			else if (ctx->ctx.hasFeature<PStringer>())
-			{
-				auto buf = instance<std::string>::make(ctx->ctx.getFeature<types::PStringer>()->toString(ctx->ctx));
-				hndl.write(buf->data(), uint32_t(buf->size()), ctx->read);
-				ctx->read = buf->size();
-				ctx->ctx = buf;
-			}
-		});
-
-		fileReq->on<uft_open>([](const auto &, uvw::FileReq &hndl) {
-			auto ctx = hndl.data<FSContext>();
-			auto sub = ctx->ondata;
-			ctx->ctx = sub->execute(sub, { hndl.craft_instance() });
-
-			if (!ctx->ctx)
-			{
-				hndl.close();
-			}
-			else if (ctx->ctx.isType<std::string>())
-			{
-				auto& str = ctx->ctx.asType<std::string>();
-				hndl.write(str->data(), uint32_t(str->size()), 0);
-				ctx->read = str->size();
-			}
-			else if (ctx->ctx.isType<lisp::library::Buffer>())
-			{
-				auto& buf = ctx->ctx.asType<lisp::library::Buffer>();
-				
-				hndl.write((char*)buf->data().data(), uint32_t(buf->data().size()), 0);
-				ctx->read = uint32_t(*buf->size());
-			}
-			else if (ctx->ctx.hasFeature<PStringer>())
-			{
-				auto buf = instance<std::string>::make(ctx->ctx.getFeature<types::PStringer>()->toString(ctx->ctx));
-				hndl.write(buf->data(), uint32_t(buf->size()), 0);
-				ctx->read = buf->size();
-				ctx->ctx = buf;
-			}
-		});
-
-		auto flags = uvw::Flags<uvw::FileReq::FileOpen>::from<uvw::FileReq::FileOpen::WRONLY, uvw::FileReq::FileOpen::CREAT>();
-		fileReq->open(*filename, flags, 0644);
-
-		return fileReq;
-	});
+	lMM(uVF"/read", [](t_fireq r, t_i64 f, t_i64 m) {r->read(*f, *m); });
+	lMM(uVF"/stat", [](t_fireq r) {r->stat(); });
+	lMM(uVF"/sync", [](t_fireq r) {r->sync(); });
+	lMM(uVF"/syncSync", [](t_fireq r) {r->syncSync(); });
+	lMM(uVF"/truncate", [](t_fireq r, t_i64 f) {r->truncate(*f); });
+	lMM(uVF"/truncateSync", [](t_fireq r, t_i64 f) {r->truncateSync(*f); });
+	lMM(uVF"/write", [](t_fireq r, t_str d, t_i64 o) {r->write(d->data(), d->size(), *o); });
 }

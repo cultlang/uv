@@ -24,7 +24,6 @@ typedef instance<int64_t> t_i64;
 
 typedef instance<craft::lisp::PSubroutine> t_sub;
 CRAFT_DEFINE(PromisePair) { _.defaults(); }
-CRAFT_DEFINE(FSContext) { _.defaults(); }
 CRAFT_DEFINE(StreamContext) { _.defaults(); }
 
 PromisePair::PromisePair(instance<craft::lisp::PSubroutine> f, instance<craft::lisp::PSubroutine> s)
@@ -81,7 +80,9 @@ void uv::make_stream_bindings(craft::types::instance<craft::lisp::Module> m)
 	lMM(uVS"/accept", [](t_pip server, t_pip client) {server->accept(*client);});
 	lMM(uVS"/listen", [](t_pip server) {server->listen();});
 	lMM(uVS"/read", [](t_pip hnd) {hnd->read();});
-	lMM(uVS"/write", [](t_pip hnd, t_str d) {hnd->write(d->data(), d->size());});
+	lMM(uVS"/write", [](t_pip hnd, t_str d) {
+		hnd->write(d->data(), d->size());
+	});
 	lMM("uv/close", [](t_pip hnd) {hnd->close();});
 
 	lMM(uVS"/accept", [](t_tcp server, t_tcp client) {server->accept(*client); });

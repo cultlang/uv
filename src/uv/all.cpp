@@ -139,6 +139,14 @@ CRAFT_TYPE_DEFINE(uvw::ErrorEvent)
 }
 
 // fs.hpp
+CRAFT_TYPE_DEFINE(uvw::FsEvent<uvw::details::UVFsType::OPEN>)
+{
+	_.add<GraphPropertyName>("uv/FsEvent/Open");
+	_.add<GraphPropertyCppName>("uvw::FsEvent<uvw::details::UVFsType::OPEN>");
+	_.use<PConstructor>().singleton<DefaultConstructor>();
+	_.defaults();
+
+}
 CRAFT_TYPE_DEFINE(uvw::FsEvent<uvw::details::UVFsType::READ>)
 {
 	_.add<GraphPropertyName>("uv/FsEvent/Read");

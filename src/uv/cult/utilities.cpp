@@ -135,12 +135,12 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 		case UV_TTY:
 		{
 
-			instance<uvw::TTYHandle> res = lisp::Execution::exec_fromCurrentModule("tty", { l, t_u32::make(1) });
+			instance<uvw::TTYHandle> res = lisp::Execution::exec_fromCurrentModule("uv/tty", { l, t_u32::make(1) });
 			return (instance<>)res;
 		}
 		case UV_NAMED_PIPE:
 		{
-			instance<uvw::PipeHandle> res = lisp::Execution::exec_fromCurrentModule("pipe", { l });
+			instance<uvw::PipeHandle> res = lisp::Execution::exec_fromCurrentModule("uv/pipe", { l });
 			res->open(1);
 			return (instance<>)res;
 		}
