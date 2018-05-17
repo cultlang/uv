@@ -2,6 +2,9 @@
 
 #include "all.h"
 
+#include "cult/context.h"
+
+
 #include "lisp/semantics/cult/calling.h"
 
 #include "uvw.hpp"
@@ -750,9 +753,6 @@ CRAFT_DEFINE(uvw::UDPHandle)
 
 
 
-
-
-
 void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
 {
 	auto semantics = m->require<CultSemantics>();
@@ -778,4 +778,7 @@ void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
 	make_tty_bindings(m);
 	make_util_bindings(m);
 }
+
+
+BuiltinModuleDescription cultlang::uv::BuiltinUv("cult/uv", cultlang::uv::make_uv_bindings);
 #include "types/dll_entry.inc"

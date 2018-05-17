@@ -3,12 +3,8 @@
 
 namespace cultlang {
 namespace uv {
-	CULTLANG_UV_EXPORTED void make_fs_bindings(craft::types::instance<craft::lisp::Module> m);
-	CULTLANG_UV_EXPORTED void make_process_bindings(craft::types::instance<craft::lisp::Module> m);
-	CULTLANG_UV_EXPORTED void make_tcp_bindings(craft::types::instance<craft::lisp::Module> m);
-	CULTLANG_UV_EXPORTED void make_util_bindings(craft::types::instance<craft::lisp::Module> m);
-	CULTLANG_UV_EXPORTED void make_pipe_bindings(craft::types::instance<craft::lisp::Module> m);
-	CULTLANG_UV_EXPORTED void make_tty_bindings(craft::types::instance<craft::lisp::Module> m);
+	extern craft::lisp::BuiltinModuleDescription BuiltinUv;
+
 	CULTLANG_UV_EXPORTED void make_uv_bindings(craft::types::instance<craft::lisp::Module> m);
 }}
 
