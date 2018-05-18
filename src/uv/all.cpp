@@ -753,30 +753,32 @@ CRAFT_DEFINE(uvw::UDPHandle)
 
 
 
-void cultlang::uv::make_uv_bindings(instance<craft::lisp::Module> m)
+instance<Module> cultlang::uv::make_uv_bindings(craft::instance<craft::lisp::Namespace> ns, craft::instance<> loader)
 {
-	auto semantics = m->require<CultSemantics>();
-
-	semantics->builtin_implementMultiMethod("uv/loop",
+	auto ret = instance<Module>::make(ns, loader);
+	auto sem = instance<CultSemantics>::make(ret);
+	sem->builtin_implementMultiMethod("uv/loop",
 		[]()
 	{
 		return uvw::Loop::create();
 	});
 
-	semantics->builtin_implementMultiMethod("uv/run",
+	sem->builtin_implementMultiMethod("uv/run",
 		[](instance<uvw::Loop> loop)
 	{
 		loop->run();
 	});
 
-	make_fs_bindings(m);
-	make_process_bindings(m);
+	make_fs_bindings(ret);
+	make_process_bindings(ret);
 
-	make_pipe_bindings(m);
-	make_stream_bindings(m);
-	make_tcp_bindings(m);
-	make_tty_bindings(m);
-	make_util_bindings(m);
+	make_pipe_bindings(ret);
+	make_stream_bindings(ret);
+	make_tcp_bindings(ret);
+	make_tty_bindings(ret);
+	make_util_bindings(ret);
+
+	return ret;
 }
 
 
