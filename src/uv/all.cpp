@@ -757,6 +757,7 @@ instance<Module> cultlang::uv::make_uv_bindings(craft::instance<craft::lisp::Nam
 {
 	auto ret = instance<Module>::make(ns, loader);
 	auto sem = instance<CultSemantics>::make(ret);
+	ret->builtin_setSemantics(sem);
 	sem->builtin_implementMultiMethod("uv/loop",
 		[]()
 	{
