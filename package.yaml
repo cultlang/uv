@@ -11,8 +11,10 @@ dependencies:
 vendor-dependencies:
   x86_64-pc-windows-msvccoff: 
     - libuv
-  x86_64-apple-macosx-macho: []
-  x86_64-pc-linux-gnu: []
+  x86_64-apple-macosx-macho:
+    - uv
+  x86_64-pc-linux-gnu:
+    - uv
 
 platform-dependencies:
   x86_64-pc-windows-msvccoff:

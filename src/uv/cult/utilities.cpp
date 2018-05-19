@@ -33,12 +33,12 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 		handle->data(instance<PromisePair>::make(f, s));
 
 		handle->on<uvw::ErrorEvent>([](uvw::ErrorEvent &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
+			auto sub = hndl.template data<PromisePair>()->fail;
 			sub->execute(sub, { instance<uvw::ErrorEvent>::make(ev.code()), hndl.craft_instance() });
 		});
 
 		handle->on<uvw::CheckEvent>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
+			auto sub = hndl.template data<PromisePair>()->success;
 			sub->execute(sub, { instance<uvw::CheckEvent>::make(), hndl.craft_instance() });
 		});
 
@@ -53,12 +53,12 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 		handle->data(instance<PromisePair>::make(f, s));
 
 		handle->on<uvw::ErrorEvent>([](uvw::ErrorEvent &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
+			auto sub = hndl.template data<PromisePair>()->fail;
 			sub->execute(sub, { instance<uvw::ErrorEvent>::make(ev.code()), hndl.craft_instance() });
 		});
 
 		handle->on<uvw::IdleEvent>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
+			auto sub = hndl.template data<PromisePair>()->success;
 			sub->execute(sub, { instance<uvw::IdleEvent>::make(), hndl.craft_instance() });
 		});
 
@@ -73,12 +73,12 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 		handle->data(instance<PromisePair>::make(f, s));
 
 		handle->on<uvw::ErrorEvent>([](uvw::ErrorEvent &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
+			auto sub = hndl.template data<PromisePair>()->fail;
 			sub->execute(sub, { instance<uvw::ErrorEvent>::make(ev.code()), hndl.craft_instance() });
 		});
 
 		handle->on<uvw::PrepareEvent>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
+			auto sub = hndl.template data<PromisePair>()->success;
 			sub->execute(sub, { instance<uvw::PrepareEvent>::make(), hndl.craft_instance() });
 		});
 
@@ -93,12 +93,12 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 		handle->data(instance<PromisePair>::make(f, s));
 
 		handle->on<uvw::ErrorEvent>([](uvw::ErrorEvent &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->fail;
+			auto sub = hndl.template data<PromisePair>()->fail;
 			sub->execute(sub, { instance<uvw::ErrorEvent>::make(ev.code()), hndl.craft_instance() });
 		});
 
 		handle->on<uvw::TimerEvent>([](auto &ev, auto &hndl) {
-			auto sub = hndl.data<PromisePair>()->success;
+			auto sub = hndl.template data<PromisePair>()->success;
 			sub->execute(sub, { instance<uvw::TimerEvent>::make(), hndl.craft_instance() });
 		});
 

@@ -92,56 +92,56 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 		auto request = l->resource<uvw::FileReq>();
 
 		request->on<uerr>([](uerr &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if(sub->onerr)
 			{
 				sub->onerr->execute(sub->onerr, { instance<uerr>::make(ev.code()), hndl.craft_instance() });
 			}
 		});
 		request->on<uclos>([](uclos &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onclose)
 			{
 				sub->onclose->execute(sub->onclose, { instance<uclos>::make(), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_open>([](uft_open &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onopen)
 			{
 				sub->onopen->execute(sub->onopen, { instance<uft_open>::make(ev.path), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_write>([](uft_write &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<cultlang::uv::FileRequestContext>();
 			if (sub->onwrite)
 			{
 				sub->onwrite->execute(sub->onwrite, { instance<uft_write>::make(ev.path, ev.size), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_send>([](uft_send &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onsend)
 			{
 				sub->onsend->execute(sub->onsend, { instance<uft_send>::make(ev.path, ev.size), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_stat>([](uft_stat &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onstat)
 			{
 				sub->onstat->execute(sub->onstat, { instance<uft_stat>::make(ev.path, ev.stat), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_fstat>([](uft_fstat &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onfstat)
 			{
 				sub->onfstat->execute(sub->onfstat, { instance<uft_fstat>::make(ev.path, ev.stat), hndl.craft_instance() });
 			}
 		});
 		request->on<uft_lstat>([](uft_lstat &ev, auto &hndl) {
-			auto sub = hndl.data<uv::FileRequestContext>();
+			auto sub = hndl.template data<uv::FileRequestContext>();
 			if (sub->onlstat)
 			{
 				sub->onlstat->execute(sub->onlstat, { instance<uft_lstat>::make(ev.path, ev.stat), hndl.craft_instance() });
