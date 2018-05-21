@@ -124,6 +124,7 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 			return (instance<>)res;
 		}
 		default:
+			throw stdext::exception("Unable to Detect STDIN type");
 			break;
 		}
 	});
@@ -145,6 +146,7 @@ void cultlang::uv::make_util_bindings(craft::types::instance<craft::lisp::Module
 			return (instance<>)res;
 		}
 		default:
+			throw stdext::exception("Unable to Detect STOUT type");
 			break;
 		}
 	});
