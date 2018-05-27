@@ -37,12 +37,45 @@ StreamContext::StreamContext()
 {
 
 }
+namespace _impl {
+	//instance<craft::lisp::Symbol> at = craft::lisp::Symbol::makeSymbol
+}
 
 void uv::make_stream_bindings(craft::types::instance<craft::lisp::Module> m)
 {
 	auto semantics = m->require<lisp::CultSemantics>();
 
 	lMM(uVS, []() { return t_sC::make(); });
+	lMM(uVS, [](instance<lisp::library::Map> m) { 
+		auto res = t_sC::make();
+		instance<> at;
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":error"));
+		if (at) res->onerr = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":close"));
+		if (at) res->onclose = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":connect"));
+		if (at) res->onconnect = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":end"));
+		if (at) res->onend = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":listen"));
+		if (at) res->onlisten = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":shutdown"));
+		if (at) res->onshutdown = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":write"));
+		if (at) res->onwrite = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":data"));
+		if (at) res->ondata = at.asType<lisp::PSubroutine>();
+
+		return res;
+	});
 
 	lMM(uVS"/error", [](t_sC s) { return s->onerr; });
 	lMM(uVS"/error", [](t_sC s, t_pS p) { s->onerr = p; });
