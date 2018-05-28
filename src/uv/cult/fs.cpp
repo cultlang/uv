@@ -22,20 +22,8 @@ uv::FileRequestContext::FileRequestContext()
 
 }
 
-typedef instance<uvw::Loop> t_lop;
-typedef instance<std::string> t_str;
-typedef instance<int64_t> t_i64;
-typedef instance<int64_t> t_i32;
-typedef instance<uint8_t> t_u8;
-typedef instance<craft::lisp::PSubroutine> t_sub;
-typedef instance<uv::FileRequestContext> t_fictx;
-typedef instance<uvw::FsReq> t_fsreq;
-typedef instance<uvw::FileReq> t_fireq;
-
 typedef uvw::ErrorEvent uerr;
 typedef uvw::CloseEvent uclos;
-
-
 
 typedef uvw::FsEvent<uvw::details::UVFsType::OPEN> uft_open;
 typedef uvw::FsEvent<uvw::details::UVFsType::CLOSE> uft_close;
@@ -51,6 +39,23 @@ typedef uvw::FsEvent<uvw::details::UVFsType::MKDIR> uft_mkdir;
 typedef uvw::FsEvent<uvw::details::UVFsType::MKDTEMP> uft_mkdtmp;
 typedef uvw::FsEvent<uvw::details::UVFsType::RMDIR> uft_rmdir;
 
+
+typedef instance<uvw::Loop> t_lop;
+typedef instance<std::string> t_str;
+typedef instance<int64_t> t_i64;
+typedef instance<int64_t> t_i32;
+typedef instance<uint8_t> t_u8;
+typedef instance<craft::lisp::PSubroutine> t_sub;
+typedef instance<uv::FileRequestContext> t_fictx;
+typedef instance<uvw::FsReq> t_fsreq;
+typedef instance<uvw::FileReq> t_fireq;
+typedef instance<uft_fstat> t_fstat;
+
+
+
+
+
+
 #define lMM semantics->builtin_implementMultiMethod
 #define uVF "uv/fs"
 
@@ -59,36 +64,81 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 	auto semantics = m->require<CultSemantics>();
 	
 #pragma region ctx
-	lMM(uVF"/file/ctx", []() {return t_fictx::make();});
+	lMM(uVF"/context", []() {return t_fictx::make();});
 
-	lMM(uVF"ctx/error", [](t_fictx s) { return s->onerr; });
-	lMM(uVF"ctx/error", [](t_fictx s, t_sub p) { s->onerr = p; });
+	lMM(uVF"/context", [](instance<library::Map> m) {
+		auto res = t_fictx::make();
+		instance<> at;
 
-	lMM(uVF"ctx/close", [](t_fictx s) { return s->onclose; });
-	lMM(uVF"ctx/close", [](t_fictx s, t_sub p) { s->onclose = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":context"));
+		if (at) res->ctx = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/read", [](t_fictx s) { return s->onread; });
-	lMM(uVF"ctx/read", [](t_fictx s, t_sub p) { s->onread = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":chmod"));
+		if (at) res->onchmod = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/write", [](t_fictx s) { return s->onwrite; });
-	lMM(uVF"ctx/write", [](t_fictx s, t_sub p) { s->onwrite = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":close"));
+		if (at) res->onclose = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/send", [](t_fictx s) { return s->onsend; });
-	lMM(uVF"ctx/send", [](t_fictx s, t_sub p) { s->onsend = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":error"));
+		if (at) res->onerr = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/stat", [](t_fictx s) { return s->onstat; });
-	lMM(uVF"ctx/stat", [](t_fictx s, t_sub p) { s->onstat = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":fstat"));
+		if (at) res->onfstat = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/fstat", [](t_fictx s) { return s->onfstat; });
-	lMM(uVF"ctx/fstat", [](t_fictx s, t_sub p) { s->onfstat = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":lstat"));
+		if (at) res->onlstat = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/lstat", [](t_fictx s) { return s->onlstat; });
-	lMM(uVF"ctx/lstat", [](t_fictx s, t_sub p) { s->onlstat = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":open"));
+		if (at) res->onopen = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF"ctx/sync", [](t_fictx s) { return s->onsync; });
-	lMM(uVF"ctx/sync", [](t_fictx s, t_sub p) { s->onsync = p; });
+		at = m->at(craft::lisp::Symbol::makeSymbol(":read"));
+		if (at) res->onread = at.asType<lisp::PSubroutine>();
 
-	lMM(uVF, [](t_lop l, t_fictx ctx) {
+		at = m->at(craft::lisp::Symbol::makeSymbol(":send"));
+		if (at) res->onsend = at.asType<lisp::PSubroutine>();
+		at = m->at(craft::lisp::Symbol::makeSymbol(":sync"));
+		if (at) res->onsync = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":truncate"));
+		if (at) res->ontruncate = at.asType<lisp::PSubroutine>();
+
+		at = m->at(craft::lisp::Symbol::makeSymbol(":write"));
+		if (at) res->onwrite = at.asType<lisp::PSubroutine>();
+
+		return res;
+	});
+
+	lMM(uVF"/context/context", [](t_fictx s) { return s->ctx; });
+	lMM(uVF"/context/context", [](t_fictx s, instance<> p) { s->ctx = p; });
+
+	lMM(uVF"/context/error", [](t_fictx s) { return s->onerr; });
+	lMM(uVF"/context/error", [](t_fictx s, t_sub p) { s->onerr = p; });
+
+	lMM(uVF"/context/close", [](t_fictx s) { return s->onclose; });
+	lMM(uVF"/context/close", [](t_fictx s, t_sub p) { s->onclose = p; });
+
+	lMM(uVF"/context/read", [](t_fictx s) { return s->onread; });
+	lMM(uVF"/context/read", [](t_fictx s, t_sub p) { s->onread = p; });
+
+	lMM(uVF"/context/write", [](t_fictx s) { return s->onwrite; });
+	lMM(uVF"/context/write", [](t_fictx s, t_sub p) { s->onwrite = p; });
+
+	lMM(uVF"/context/send", [](t_fictx s) { return s->onsend; });
+	lMM(uVF"/context/send", [](t_fictx s, t_sub p) { s->onsend = p; });
+
+	lMM(uVF"/context/stat", [](t_fictx s) { return s->onstat; });
+	lMM(uVF"/context/stat", [](t_fictx s, t_sub p) { s->onstat = p; });
+
+	lMM(uVF"/context/fstat", [](t_fictx s) { return s->onfstat; });
+	lMM(uVF"/context/fstat", [](t_fictx s, t_sub p) { s->onfstat = p; });
+
+	lMM(uVF"/context/lstat", [](t_fictx s) { return s->onlstat; });
+	lMM(uVF"/context/lstat", [](t_fictx s, t_sub p) { s->onlstat = p; });
+
+	lMM(uVF"/context/sync", [](t_fictx s) { return s->onsync; });
+	lMM(uVF"/context/sync", [](t_fictx s, t_sub p) { s->onsync = p; });
+
+	lMM(uVF"/file", [](t_lop l) {
 		auto request = l->resource<uvw::FileReq>();
 
 		request->on<uerr>([](uerr &ev, auto &hndl) {
@@ -147,34 +197,47 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 				sub->onlstat->execute(sub->onlstat, { instance<uft_lstat>::make(ev.path, ev.stat), hndl.craft_instance() });
 			}
 		});
+		request->on<uft_read>([](uft_read &ev, auto &hndl) {
+			auto sub = hndl.template data<uv::FileRequestContext>();
+			if (sub->onread)
+			{
+				////ev.dataFsEvent(const char *pathname, std::unique_ptr<const char[]> buf, std::size_t sz)
+				sub->onread->execute(sub->onread, { instance<uft_read>::make(ev.path, std::move(ev.data), ev.size), hndl.craft_instance() });
+			}
+		});
 		
+		return request;
 	});
+	
+	lMM(uVF"/file/context", [](instance<uvw::FileReq> s) { s->template data<uv::FileRequestContext>(); });
+	lMM(uVF"/file/context", [](instance<uvw::FileReq> s, t_fictx ctx) { s->data(ctx); });
+
 	// Stat Retrival Ops
 	typedef instance<uvw::FsEvent<uvw::FsReq::Type::STAT>> t_fse_st;
-	lMM(uVF"/stat/dev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_dev); });
-	lMM(uVF"/stat/mode", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mode); });
-	lMM(uVF"/stat/nlink", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_nlink); });
-	lMM(uVF"/stat/uid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_uid); });
-	lMM(uVF"/stat/gid", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gid); });
-	lMM(uVF"/stat/rdev", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_rdev); });
-	lMM(uVF"/stat/ino", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ino); });
-	lMM(uVF"/stat/size", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_size); });
-	lMM(uVF"/stat/blksize", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blksize); });
-	lMM(uVF"/stat/blocks", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_blocks); });
-	lMM(uVF"/stat/flags", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_flags); });
-	lMM(uVF"/stat/gen", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_gen); });
+	lMM(uVF"/stat/dev", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_dev); });
+	lMM(uVF"/stat/mode", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_mode); });
+	lMM(uVF"/stat/nlink", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_nlink); });
+	lMM(uVF"/stat/uid", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_uid); });
+	lMM(uVF"/stat/gid", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_gid); });
+	lMM(uVF"/stat/rdev", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_rdev); });
+	lMM(uVF"/stat/ino", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_ino); });
+	lMM(uVF"/stat/size", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_size); });
+	lMM(uVF"/stat/blksize", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_blksize); });
+	lMM(uVF"/stat/blocks", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_blocks); });
+	lMM(uVF"/stat/flags", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_flags); });
+	lMM(uVF"/stat/gen", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_gen); });
 
-	lMM(uVF"/stat/atim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_sec); });
-	lMM(uVF"/stat/atim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_atim.tv_nsec); });
+	lMM(uVF"/stat/atim/sec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_atim.tv_sec); });
+	lMM(uVF"/stat/atim/nsec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_atim.tv_nsec); });
 
-	lMM(uVF"/stat/mtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_sec); });
-	lMM(uVF"/stat/mtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_mtim.tv_nsec); });
+	lMM(uVF"/stat/mtim/sec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_mtim.tv_sec); });
+	lMM(uVF"/stat/mtim/nsec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_mtim.tv_nsec); });
 
-	lMM(uVF"/stat/ctim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_sec); });
-	lMM(uVF"/stat/ctim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_ctim.tv_nsec); });
+	lMM(uVF"/stat/ctim/sec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_ctim.tv_sec); });
+	lMM(uVF"/stat/ctim/nsec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_ctim.tv_nsec); });
 
-	lMM(uVF"/stat/birthtim/sec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_sec); });
-	lMM(uVF"/stat/birthtim/nsec", [](t_fse_st s) {instance<uint64_t>::make(s->stat.st_birthtim.tv_nsec); });
+	lMM(uVF"/stat/birthtim/sec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_birthtim.tv_sec); });
+	lMM(uVF"/stat/birthtim/nsec", [](t_fstat s) {return instance<uint64_t>::make(s->stat.st_birthtim.tv_nsec); });
 
 	lMM(uVF"/chmod", [](t_fireq r, t_i32 p) {r->chmod(*p); });
 	lMM(uVF"/chmodSync", [](t_fireq r, t_i32 p) {r->chmodSync(*p); });
@@ -185,6 +248,7 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 	lMM(uVF"/datasync", [](t_fireq r) {r->datasync(); });
 	lMM(uVF"/datasyncSync", [](t_fireq r) {r->datasyncSync(); });
 
+	lMM(uVF"/open", [](t_fireq r, t_str p) {r->open(*p, FileReq::FileOpen::RDONLY, 0644); });
 	lMM(uVF"/open", [](t_fireq r, t_str p, t_i32 f, t_i32 m) {r->open(*p, *m, *m); });
 
 	lMM(uVF"/openflags/APPEND", []() { return t_i32::make((int32_t)FileReq::FileOpen::APPEND); });
@@ -219,7 +283,7 @@ void cultlang::uv::make_fs_bindings(craft::types::instance<craft::lisp::Module> 
 	});
 
 	lMM(uVF"/read", [](t_fireq r, t_i64 f, t_i64 m) {r->read(*f, *m); });
-	lMM(uVF"/stat", [](t_fireq r) {r->stat(); });
+	lMM(uVF"/fstat", [](t_fireq r) {r->stat(); });
 	lMM(uVF"/sync", [](t_fireq r) {r->sync(); });
 	lMM(uVF"/syncSync", [](t_fireq r) {r->syncSync(); });
 	lMM(uVF"/truncate", [](t_fireq r, t_i64 f) {r->truncate(*f); });

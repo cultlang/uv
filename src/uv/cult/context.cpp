@@ -50,6 +50,9 @@ void uv::make_stream_bindings(craft::types::instance<craft::lisp::Module> m)
 		auto res = t_sC::make();
 		instance<> at;
 
+		at = m->at(craft::lisp::Symbol::makeSymbol(":context"));
+		if (at) res->ctx = at.asType<lisp::PSubroutine>();
+
 		at = m->at(craft::lisp::Symbol::makeSymbol(":error"));
 		if (at) res->onerr = at.asType<lisp::PSubroutine>();
 
@@ -100,6 +103,9 @@ void uv::make_stream_bindings(craft::types::instance<craft::lisp::Module> m)
 
 	lMM(uVS"/data", [](t_sC s) { return s->ondata; });
 	lMM(uVS"/data", [](t_sC s, t_pS p) { s->ondata = p; });
+
+	lMM(uVS"/context", [](t_sC s) { return s->ctx; });
+	lMM(uVS"/context", [](t_sC s, instance<> p) { s->ctx = p; });
 
 	lMM(uVS"/context", [](instance<uvw::TcpHandle> h) {return h->data<StreamContext>(); });
 	lMM(uVS"/context", [](instance<uvw::TcpHandle> h, t_sC c) {return h->data(c); });
