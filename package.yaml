@@ -4,9 +4,9 @@ shortname: Libuv Bindings for cultlang
 version: "1.0.0"
 repo: http://github.com/OffByOneStudios/craft-base
 dependencies:
-  - Util@OffByOneStudios
-  - Types@OffByOneStudios
-  - Lisp@OffByOneStudios
+  - Util
+  - Types
+  - Lisp
 
 vendor-dependencies:
   x86_64-pc-windows-msvccoff: 
