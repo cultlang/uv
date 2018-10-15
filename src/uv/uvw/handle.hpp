@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <utility>
 #include <memory>
-#include "uv/uv.h"
+#include "uv.h"
 #include "resource.hpp"
 #include "util.hpp"
 

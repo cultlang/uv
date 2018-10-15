@@ -5,7 +5,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include "uv/uv.h"
+#include "uv.h"
 #include "loop.hpp"
 #include "underlying_type.hpp"
 

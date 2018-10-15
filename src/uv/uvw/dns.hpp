@@ -4,7 +4,7 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include "uv/uv.h"
+#include "uv.h"
 #include "request.hpp"
 #include "util.hpp"
 #include "loop.hpp"

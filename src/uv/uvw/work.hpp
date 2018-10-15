@@ -4,7 +4,7 @@
 #include <functional>
 #include <utility>
 #include <memory>
-#include "uv/uv.h"
+#include "uv.h"
 #include "request.hpp"
 #include "loop.hpp"
 

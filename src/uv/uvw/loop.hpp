@@ -10,7 +10,7 @@
 #include <utility>
 #include <type_traits>
 #include <chrono>
-#include "uv/uv.h"
+#include "uv.h"
 #include "emitter.hpp"
 #include "util.hpp"
 

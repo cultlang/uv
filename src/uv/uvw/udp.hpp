@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include "uv/uv.h"
+#include "uv.h"
 #include "request.hpp"
 #include "handle.hpp"
 #include "util.hpp"

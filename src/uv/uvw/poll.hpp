@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <utility>
 #include <memory>
-#include "uv/uv.h"
+#include "uv.h"
 #include "handle.hpp"
 #include "util.hpp"
 

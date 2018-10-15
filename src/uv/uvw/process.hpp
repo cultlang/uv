@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "uv/uv.h"
+#include "uv.h"
 #include "handle.hpp"
 #include "stream.hpp"
 #include "util.hpp"

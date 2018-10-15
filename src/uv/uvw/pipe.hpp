@@ -5,7 +5,7 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include "uv/uv.h"
+#include "uv.h"
 #include "request.hpp"
 #include "stream.hpp"
 #include "util.hpp"

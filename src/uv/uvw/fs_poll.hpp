@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 #include <chrono>
-#include "uv/uv.h"
+#include "uv.h"
 #include "handle.hpp"
 #include "util.hpp"
 #include "loop.hpp"

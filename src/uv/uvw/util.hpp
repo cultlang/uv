@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include "uv/uv.h"
+#include "uv.h"
 
 
 #ifdef _WIN32

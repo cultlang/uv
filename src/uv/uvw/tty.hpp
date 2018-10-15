@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <memory>
-#include "uv/uv.h"
+#include "uv.h"
 #include "stream.hpp"
 #include "util.hpp"
 

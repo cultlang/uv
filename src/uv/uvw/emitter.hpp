@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory>
 #include <list>
-#include "uv/uv.h"
+#include "uv.h"
 
 
 namespace uvw {

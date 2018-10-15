@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <utility>
 #include <memory>
-#include "uv/uv.h"
+#include "uv.h"
 #include "request.hpp"
 #include "handle.hpp"
 #include "loop.hpp"
