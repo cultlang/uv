@@ -753,11 +753,9 @@ CRAFT_DEFINE(uvw::UDPHandle)
 
 
 
-instance<Module> cultlang::uv::make_uv_bindings(craft::instance<craft::lisp::Namespace> ns, craft::instance<> loader)
+void cultlang::uv::make_bindings(craft::instance<craft::lisp::Module> ret)
 {
-	auto ret = instance<Module>::make(ns, loader);
-	auto sem = instance<CultSemantics>::make(ret);
-	ret->builtin_setSemantics(sem);
+	auto sem = ret->require<lisp::CultSemantics>();
 	sem->builtin_implementMultiMethod("uv/loop",
 		[]()
 	{
@@ -779,9 +777,9 @@ instance<Module> cultlang::uv::make_uv_bindings(craft::instance<craft::lisp::Nam
 	make_tty_bindings(ret);
 	make_util_bindings(ret);
 
-	return ret;
+	return;
 }
 
 
-BuiltinModuleDescription cultlang::uv::BuiltinUv("cult/uv", cultlang::uv::make_uv_bindings);
+BuiltinModuleDescription cultlang::uv::BuiltinUv("extensions/uv", cultlang::uv::make_bindings);
 #include "types/dll_entry.inc"

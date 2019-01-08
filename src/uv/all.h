@@ -5,7 +5,7 @@ namespace cultlang {
 namespace uv {
 	extern craft::lisp::BuiltinModuleDescription BuiltinUv;
 
-	CULTLANG_UV_EXPORTED craft::instance<craft::lisp::Module>  make_uv_bindings(craft::instance<craft::lisp::Namespace> ns, craft::instance<> loader);
+	CULTLANG_UV_EXPORTED void make_bindings(craft::instance<craft::lisp::Module> ret);
 }}
 
 CRAFT_TYPE_DECLARE(CULTLANG_UV_EXPORTED, uvw::AsyncEvent)
